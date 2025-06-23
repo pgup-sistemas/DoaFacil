@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}DoaFácil - Sistema de Arrecadações{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero is-primary is-bold">
+    <div class="hero-body">
+        <div class="container">
+            <div class="columns is-vcentered">
+                <div class="column is-6">
+                    <h1 class="title is-2 has-text-white">
+                        <i class="fas fa-heart mr-3"></i>
+                        DoaFácil
+                    </h1>
+                    <h2 class="subtitle is-4 has-text-white">
+                        Sistema completo para arrecadações e doações. 
+                        Facilite a solidariedade em sua comunidade.
+                    </h2>
+                    <div class="buttons">
+                        {% if session.get('admin_id') %}
+                            <a href="{{ url_for('main.admin_dashboard') }}" class="button is-white is-medium is-rounded">
+                                <i class="fas fa-tachometer-alt mr-2"></i>
+                                Dashboard Admin
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('main.login_admin') }}" class="button is-white is-medium is-rounded">
+                                <i class="fas fa-user-shield mr-2"></i>
+                                Área Administrativa
+                            </a>
+                        {% endif %}
+                        <a href="#como-funciona" class="button is-outlined is-white is-medium is-rounded">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Como Funciona
+                        </a>
+                    </div>
+                </div>
+                <div class="column is-6 has-text-centered">
+                    <div class="box has-background-white">
+                        <i class="fas fa-hand-holding-heart" style="font-size: 4rem; color: #667eea;"></i>
+                        <h3 class="title is-4 mt-3">Solidariedade Simplificada</h3>
+                        <p class="subtitle is-6">Crie listas de arrecadação, gerencie doações e acompanhe o progresso em tempo real.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="section" id="como-funciona">
+    <div class="container">
+        <div class="has-text-centered mb-6">
+            <h2 class="title is-2">Como Funciona</h2>
+            <p class="subtitle is-5">Três passos simples para começar sua arrecadação</p>
+        </div>
+        
+        <div class="columns">
+            <div class="column is-4">
+                <div class="card">
+                    <div class="card-content has-text-centered">
+                        <div class="mb-4">
+                            <span class="icon is-large has-text-primary">
+                                <i class="fas fa-user-shield fa-2x"></i>
+                            </span>
+                        </div>
+                        <h3 class="title is-4">1. Administrador Cadastra Unidade</h3>
+                        <p class="subtitle is-6">
+                            O administrador do sistema registra sua igreja, ONG ou grupo comunitário. 
+                            Define o responsável e informações de contato.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-4">
+                <div class="card">
+                    <div class="card-content has-text-centered">
+                        <div class="mb-4">
+                            <span class="icon is-large has-text-primary">
+                                <i class="fas fa-list fa-2x"></i>
+                            </span>
+                        </div>
+                        <h3 class="title is-4">2. Criação de Lista</h3>
+                        <p class="subtitle is-6">
+                            O administrador define os itens necessários, quantidades e se aceita doações via PIX. 
+                            Escolhe entre modo fechado ou aberto.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-4">
+                <div class="card">
+                    <div class="card-content has-text-centered">
+                        <div class="mb-4">
+                            <span class="icon is-large has-text-primary">
+                                <i class="fas fa-share-alt fa-2x"></i>
+                            </span>
+                        </div>
+                        <h3 class="title is-4">3. Compartilhe e Acompanhe</h3>
+                        <p class="subtitle is-6">
+                            Compartilhe o link da lista. Os doadores podem contribuir facilmente 
+                            e você acompanha tudo em tempo real.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Grid -->
+<section class="section has-background-light">
+    <div class="container">
+        <div class="has-text-centered mb-6">
+            <h2 class="title is-2">Funcionalidades</h2>
+            <p class="subtitle is-5">Tudo que você precisa para uma arrecadação eficiente</p>
+        </div>
+        
+        <div class="columns is-multiline">
+            <div class="column is-6">
+                <div class="box">
+                    <div class="media">
+                        <div class="media-left">
+                            <span class="icon is-large has-text-success">
+                                <i class="fas fa-mobile-alt fa-2x"></i>
+                            </span>
+                        </div>
+                        <div class="media-content">
+                            <h4 class="title is-5">Responsivo</h4>
+                            <p class="subtitle is-6">Interface otimizada para celulares e tablets</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-6">
+                <div class="box">
+                    <div class="media">
+                        <div class="media-left">
+                            <span class="icon is-large has-text-info">
+                                <i class="fas fa-chart-line fa-2x"></i>
+                            </span>
+                        </div>
+                        <div class="media-content">
+                            <h4 class="title is-5">Progresso em Tempo Real</h4>
+                            <p class="subtitle is-6">Acompanhe o progresso de cada item com gráficos</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-6">
+                <div class="box">
+                    <div class="media">
+                        <div class="media-left">
+                            <span class="icon is-large has-text-warning">
+                                <i class="fas fa-qrcode fa-2x"></i>
+                            </span>
+                        </div>
+                        <div class="media-content">
+                            <h4 class="title is-5">PIX Integrado</h4>
+                            <p class="subtitle is-6">Aceite doações financeiras via PIX</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-6">
+                <div class="box">
+                    <div class="media">
+                        <div class="media-left">
+                            <span class="icon is-large has-text-danger">
+                                <i class="fas fa-file-export fa-2x"></i>
+                            </span>
+                        </div>
+                        <div class="media-content">
+                            <h4 class="title is-5">Exportação</h4>
+                            <p class="subtitle is-6">Relatórios em CSV e PDF</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-6">
+                <div class="box">
+                    <div class="media">
+                        <div class="media-left">
+                            <span class="icon is-large has-text-primary">
+                                <i class="fas fa-bell fa-2x"></i>
+                            </span>
+                        </div>
+                        <div class="media-content">
+                            <h4 class="title is-5">Notificações</h4>
+                            <p class="subtitle is-6">E-mail automático para novas doações</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-6">
+                <div class="box">
+                    <div class="media">
+                        <div class="media-left">
+                            <span class="icon is-large has-text-link">
+                                <i class="fas fa-code fa-2x"></i>
+                            </span>
+                        </div>
+                        <div class="media-content">
+                            <h4 class="title is-5">API REST</h4>
+                            <p class="subtitle is-6">Integração com outros sistemas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Access Section -->
+<section class="section">
+    <div class="container">
+        <div class="columns">
+            <div class="column is-6">
+                <div class="card">
+                    <div class="card-content">
+                        <h3 class="title is-4">
+                            <i class="fas fa-user-shield mr-2"></i>
+                            Área Administrativa
+                        </h3>
+                        <p class="subtitle is-6">
+                            Acesso restrito para administradores do sistema
+                        </p>
+                        <ul>
+                            <li>Cadastro de unidades organizadoras</li>
+                            <li>Criação e gerenciamento de listas</li>
+                            <li>Dashboard com estatísticas</li>
+                            <li>Exportação de relatórios</li>
+                        </ul>
+                        {% if session.get('admin_id') %}
+                            <a href="{{ url_for('main.admin_dashboard') }}" class="button is-primary is-rounded">
+                                <i class="fas fa-tachometer-alt mr-2"></i>
+                                Acessar Dashboard
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('main.login_admin') }}" class="button is-primary is-rounded">
+                                <i class="fas fa-sign-in-alt mr-2"></i>
+                                Fazer Login
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-6">
+                <div class="card">
+                    <div class="card-content">
+                        <h3 class="title is-4">
+                            <i class="fas fa-heart mr-2"></i>
+                            Área Pública
+                        </h3>
+                        <p class="subtitle is-6">
+                            Acesso livre para doadores
+                        </p>
+                        <ul>
+                            <li>Visualização de listas de arrecadação</li>
+                            <li>Realização de doações</li>
+                            <li>Acompanhamento do progresso</li>
+                            <li>Compartilhamento via redes sociais</li>
+                        </ul>
+                        <p class="has-text-grey">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Para doar, você precisa do link de uma lista ativa
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="section has-background-light">
+    <div class="container">
+        <div class="has-text-centered">
+            <h2 class="title is-2">Pronto para começar?</h2>
+            <p class="subtitle is-5 mb-5">
+                Entre em contato para solicitar acesso administrativo
+            </p>
+            <div class="buttons is-centered">
+                {% if session.get('admin_id') %}
+                    <a href="{{ url_for('main.admin_dashboard') }}" class="button is-primary is-large is-rounded">
+                        <i class="fas fa-tachometer-alt mr-2"></i>
+                        Acessar Dashboard
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('main.login_admin') }}" class="button is-primary is-large is-rounded">
+                        <i class="fas fa-user-shield mr-2"></i>
+                        Área Administrativa
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 

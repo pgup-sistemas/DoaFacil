@@ -1,0 +1,228 @@
+
+
+# ✅ **Projeto Web DoaFácil – Sistema de Arrecadações com Flask + Bulma**
+
+## 🧱 **Stack Tecnológico**
+
+* **Backend**: Python 3.10+ + Flask
+* **Frontend**: HTML + **Bulma CSS** (leve, mobile-first, sem JS obrigatório)
+* **Banco de Dados**: SQLite (local) ou PostgreSQL (produção)
+* **ORM**: SQLAlchemy
+* **Templates**: Jinja2 (nativo do Flask)
+
+---
+1. Cadastro de Unidades Organizadas
+Objetivo: Permitir que o administrador crie e gerencie unidades organizadoras como igrejas, ONGs ou grupos comunitários.
+
+Campos:
+
+Nome da Unidade
+
+Responsável
+
+E-mail (opcional)
+
+Descrição (opcional)
+
+Gerenciamento de múltiplas unidades para diferentes campanhas.
+
+2. Criação de Listas de Arrecadação
+O administrador pode criar listas de arrecadação, escolhendo se elas serão para itens físicos ou doações financeiras.
+
+Cada lista gerada terá um link único que pode ser compartilhado.
+
+Modo de lista:
+
+Aberto: Doadores podem sugerir itens.
+
+Fechado: O administrador define os itens e as quantidades necessárias.
+
+3. Doações
+Doação de Itens: O doador escolhe o item e a quantidade que deseja doar, dentro dos limites definidos pela unidade organizadora.
+
+Doação de Dinheiro: Os doadores podem enviar dinheiro via chave Pix ou outro sistema de pagamento definido.
+
+O sistema atualiza o progresso de cada item de acordo com as doações recebidas.
+
+4. Notificações e Alertas
+Notificação de Arrecadação: Sempre que uma doação é registrada, o administrador da unidade recebe uma notificação (via e-mail ou SMS).
+
+Notificação de Meta Atingida: Quando a meta de arrecadação de um item for atingida, todos os doadores daquele item recebem uma mensagem de agradecimento (via e-mail ou SMS).
+
+5. Dashboard do Administrador
+O dashboard do administrador oferece uma visão geral das listas de arrecadação, com gráficos de progresso e informações detalhadas sobre as doações realizadas.
+
+O administrador pode exportar os dados de arrecadação em formatos CSV ou PDF.
+
+O painel permite editar as listas (exceto para itens já doados) e visualizar relatórios financeiros.
+
+6. API RESTful
+A API permitirá que o sistema seja integrado com outras plataformas de gerenciamento ou arrecadação.
+
+Principais Endpoints:
+
+POST /api/donations: Registrar uma doação de itens ou dinheiro.
+
+GET /api/lists/<list_id>: Consultar o status de uma lista de arrecadação.
+
+GET /api/items/<item_id>: Verificar o progresso de um item de arrecadação.
+
+Segurança: A API será protegida por tokens JWT ou API Keys, garantindo que somente sistemas autorizados possam acessar os dados.
+
+7. Exportação de Dados
+O administrador pode exportar dados de doações em formatos CSV e PDF:
+
+CSV: Para análise em planilhas (ex: detalhes de doações, itens arrecadados, dados dos doadores).
+
+PDF: Para relatórios formais (ex: impressão de relatórios para a comunidade ou parceiros).
+
+
+
+
+## 📁 **Estrutura do Projeto**
+
+```
+arrecadador/
+│
+├── app/
+│   ├── __init__.py
+│   ├── routes.py
+│   ├── models.py
+│   ├── forms.py
+│   ├── utils.py
+│   ├── static/
+│   │   └── css/  (customizações, Bulma)
+│   └── templates/
+│       ├── base.html
+│       ├── index.html
+│       ├── create_list.html
+│       ├── view_list.html
+│       ├── dashboard.html
+│       └── donate.html
+│
+├── config.py
+├── run.py
+└── requirements.txt
+```
+
+---
+
+## 🔐 **Entidades e Relacionamentos**
+
+### ✅ UnidadeOrganizadora
+
+* `id`, `nome`, `responsavel`, `email`
+* 1\:N com Listas
+
+### ✅ Lista
+
+* `id`, `nome`, `descricao`, `modo`, `aceita_pix`, `chave_pix`, `unidade_id`
+* 1\:N com Itens
+
+### ✅ Item
+
+* `id`, `nome`, `quantidade_necessaria`, `unidade_medida`, `lista_id`
+* 1\:N com Doacoes
+
+### ✅ Doacao
+
+* `id`, `doador_nome`, `quantidade`, `item_id`, `data_doacao`
+
+---
+
+## 🌐 **Rotas Principais**
+
+| Rota                   | Método   | Descrição                                |
+| ---------------------- | -------- | ---------------------------------------- |
+| `/`                    | GET      | Página inicial: criar nova lista         |
+| `/unidade/cadastrar`   | GET/POST | Formulário para nova unidade             |
+| `/lista/criar`         | GET/POST | Criação de lista associada a uma unidade |
+| `/lista/<slug>`        | GET      | Página pública da lista                  |
+| `/lista/<slug>/doar`   | POST     | Ação de doação (quantidade por item)     |
+| `/admin/<token>`       | GET      | Dashboard privado da lista               |
+| `/exportar/<slug>.csv` | GET      | Exportação da lista em CSV               |
+| `/exportar/<slug>.pdf` | GET      | Exportação da lista em PDF               |
+
+---
+
+## 🎯 **Funcionalidades-Chave**
+
+### ✅ Criação de Unidade
+
+* Página simples de cadastro com nome e responsável
+* Salva no banco e retorna painel para criar listas
+
+### ✅ Criação de Lista
+
+* Escolher modo:
+
+  * Fechado (itens definidos pelo admin)
+  * Aberto (doadores sugerem itens)
+* Aceitar Pix? (sim/não) → campo para chave Pix
+* Definir itens e quantidades
+* Geração de link público e link de admin com token
+
+### ✅ Página Pública da Lista
+
+* Exibe itens, status de doação (barras ou cores)
+* Botão “Quero ajudar” → modal/form para doar
+* Exibe chave Pix (se ativado)
+* Mobile-first (Bulma faz bem essa parte)
+
+### ✅ Doações
+
+* Doadores só escolhem entre os itens existentes (modo fechado)
+* Quantidade doada não pode ultrapassar restante disponível
+* Armazena nome, item e quantidade
+
+### ✅ Dashboard do Admin
+
+* Visão geral da arrecadação
+* Lista de doadores por item
+* Edição limitada (só itens ainda não doados)
+* Botões de exportar CSV / PDF
+* Compartilhar via WhatsApp
+
+---
+
+## 🧾 **Exportação**
+
+* CSV:
+
+  * Nome da lista, itens, quantidade arrecadada, doadores
+* PDF:
+
+  * Versão formatada da mesma informação para impressão
+  * Pode usar `WeasyPrint` ou `xhtml2pdf` com Jinja2
+
+---
+
+## 🌈 **Frontend com Bulma**
+
+* `base.html`: estrutura HTML com navbar, container, scripts
+* `create_list.html`: formulário de criação com cards e inputs limpos
+* `view_list.html`: cards para cada item com barras de progresso (`progress` do Bulma)
+* `donate.html`: modal simples para doação (nome + quantidade)
+* `dashboard.html`: tabela de itens e status + exportar + editar
+
+---
+
+## ✅ Requisitos do `requirements.txt`
+
+```txt
+flask
+flask_sqlalchemy
+flask_wtf
+python-dotenv
+weasyprint
+```
+
+---
+
+## 🚀 Próximos Passos
+
+1. Deseja que eu gere esse projeto básico com arquivos iniciais (como ZIP ou Git)?
+2. Ou prefere um **protótipo navegável local** com SQLite e UI pronta para testes?
+3. Ou posso preparar apenas os modelos e rotas principais em Flask para você continuar?
+
+Me diga qual caminho prefere e eu preparo para você imediatamente.

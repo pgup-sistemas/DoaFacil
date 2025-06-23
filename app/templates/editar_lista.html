@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Lista - {{ lista.nome }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="columns is-centered">
+            <div class="column is-8">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-header-title">
+                            <h1 class="title is-3">
+                                <i class="fas fa-edit mr-2"></i>
+                                Editar Lista
+                            </h1>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <!-- Lista Info -->
+                        <div class="notification is-info is-light mb-4">
+                            <div class="media">
+                                <div class="media-left">
+                                    <span class="icon is-large">
+                                        <i class="fas fa-list fa-2x"></i>
+                                    </span>
+                                </div>
+                                <div class="media-content">
+                                    <h4 class="title is-5">{{ lista.nome }}</h4>
+                                    <p class="subtitle is-6">
+                                        <i class="fas fa-building mr-1"></i>
+                                        {{ lista.unidade.nome }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <form method="POST">
+                            {{ form.hidden_tag() }}
+                            
+                            <div class="field">
+                                <label class="label">{{ form.nome.label }}</label>
+                                <div class="control has-icons-left">
+                                    {{ form.nome(class="input", placeholder="Nome da lista") }}
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-list"></i>
+                                    </span>
+                                </div>
+                                {% if form.nome.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.nome.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="field">
+                                <label class="label">{{ form.descricao.label }}</label>
+                                <div class="control">
+                                    {{ form.descricao(class="textarea", placeholder="Descrição da lista") }}
+                                </div>
+                                {% if form.descricao.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.descricao.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="field">
+                                <label class="label">
+                                    {{ form.aceita_pix.label }}
+                                </label>
+                                <div class="control">
+                                    <label class="checkbox">
+                                        {{ form.aceita_pix() }}
+                                        Aceitar doações financeiras via PIX
+                                    </label>
+                                </div>
+                                {% if form.aceita_pix.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.aceita_pix.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="field" id="pix-field" style="display: none;">
+                                <label class="label">{{ form.chave_pix.label }}</label>
+                                <div class="control has-icons-left">
+                                    {{ form.chave_pix(class="input", placeholder="Chave PIX") }}
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-qrcode"></i>
+                                    </span>
+                                </div>
+                                {% if form.chave_pix.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.chave_pix.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="field is-grouped">
+                                <div class="control">
+                                    <button type="submit" class="button is-primary is-rounded">
+                                        <i class="fas fa-save mr-2"></i>
+                                        Salvar Alterações
+                                    </button>
+                                </div>
+                                <div class="control">
+                                    <a href="{{ url_for('main.dashboard', token=lista.token_admin) }}" class="button is-light is-rounded">
+                                        <i class="fas fa-arrow-left mr-2"></i>
+                                        Voltar ao Dashboard
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Warning -->
+                <div class="notification is-warning is-light mt-4">
+                    <div class="content">
+                        <h4 class="title is-5">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            Limitações da Edição
+                        </h4>
+                        <ul>
+                            <li><strong>Itens já doados não podem ser alterados</strong> para manter a integridade dos dados</li>
+                            <li>Você pode editar apenas informações básicas da lista</li>
+                            <li>Para adicionar novos itens, use o dashboard principal</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const pixCheckbox = document.querySelector('input[name="aceita_pix"]');
+    const pixField = document.getElementById('pix-field');
+    
+    function togglePixField() {
+        if (pixCheckbox.checked) {
+            pixField.style.display = 'block';
+        } else {
+            pixField.style.display = 'none';
+        }
+    }
+    
+    pixCheckbox.addEventListener('change', togglePixField);
+    togglePixField(); // Initial state
+});
+</script>
+{% endblock %} 

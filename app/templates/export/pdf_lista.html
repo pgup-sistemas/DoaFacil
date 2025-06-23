@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ lista.nome }} - Relatório</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .header p {
+            margin: 5px 0;
+            color: #666;
+        }
+        
+        .info-section {
+            margin-bottom: 30px;
+        }
+        
+        .info-section h2 {
+            color: #667eea;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: #667eea;
+            transition: width 0.3s ease;
+        }
+        
+        .status-complete {
+            background-color: #48c774;
+        }
+        
+        .status-warning {
+            background-color: #ffdd57;
+        }
+        
+        .status-danger {
+            background-color: #f14668;
+        }
+        
+        .summary {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 30px;
+        }
+        
+        .summary h3 {
+            color: #667eea;
+            margin-top: 0;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        
+        .donations-table {
+            margin-top: 20px;
+        }
+        
+        .donations-table th {
+            background-color: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📋 {{ lista.nome }}</h1>
+        <p><strong>Unidade:</strong> {{ lista.unidade.nome }}</p>
+        <p><strong>Responsável:</strong> {{ lista.unidade.responsavel }}</p>
+        <p><strong>Data de Criação:</strong> {{ lista.data_criacao.strftime("%d/%m/%Y às %H:%M") }}</p>
+        <p><strong>Modo:</strong> {{ lista.modo.title() }}</p>
+        {% if lista.aceita_pix and lista.chave_pix %}
+            <p><strong>Chave PIX:</strong> {{ lista.chave_pix }}</p>
+        {% endif %}
+    </div>
+    
+    {% if lista.descricao %}
+    <div class="info-section">
+        <h2>📝 Descrição</h2>
+        <p>{{ lista.descricao }}</p>
+    </div>
+    {% endif %}
+    
+    <div class="info-section">
+        <h2>📊 Progresso Geral</h2>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ lista.percentual_conclusao }}%"></div>
+        </div>
+        <p><strong>{{ "%.1f"|format(lista.percentual_conclusao) }}%</strong> concluído ({{ lista.total_arrecadado }} de {{ lista.total_itens }} itens)</p>
+    </div>
+    
+    <div class="info-section">
+        <h2>📦 Itens da Lista</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Necessário</th>
+                    <th>Arrecadado</th>
+                    <th>Restante</th>
+                    <th>Progresso</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in lista.itens %}
+                <tr>
+                    <td>
+                        <strong>{{ item.nome }}</strong>
+                        {% if item.descricao %}
+                            <br><small>{{ item.descricao }}</small>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.quantidade_necessaria }} {{ item.unidade_medida }}</td>
+                    <td>{{ item.quantidade_arrecadada }} {{ item.unidade_medida }}</td>
+                    <td>{{ item.quantidade_restante }} {{ item.unidade_medida }}</td>
+                    <td>
+                        <div class="progress-bar">
+                            <div class="progress-fill {{ 'status-complete' if item.esta_completo else 'status-warning' if item.percentual_conclusao >= 75 else 'status-danger' }}" 
+                                 style="width: {{ item.percentual_conclusao }}%"></div>
+                        </div>
+                        {{ "%.1f"|format(item.percentual_conclusao) }}%
+                    </td>
+                    <td>
+                        {% if item.esta_completo %}
+                            ✅ Completo
+                        {% elif item.percentual_conclusao >= 75 %}
+                            ⏳ Quase Lá
+                        {% else %}
+                            ⚠️ Precisa
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% set todas_doacoes = [] %}
+    {% for item in lista.itens %}
+        {% for doacao in item.doacoes %}
+            {% set _ = todas_doacoes.append(doacao) %}
+        {% endfor %}
+    {% endfor %}
+    
+    {% if todas_doacoes %}
+    <div class="info-section">
+        <h2>❤️ Doações Realizadas</h2>
+        <table class="donations-table">
+            <thead>
+                <tr>
+                    <th>Doador</th>
+                    <th>Item</th>
+                    <th>Quantidade</th>
+                    <th>Data</th>
+                    <th>Observação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doacao in todas_doacoes|sort(attribute='data_doacao', reverse=true) %}
+                <tr>
+                    <td><strong>{{ doacao.doador_nome }}</strong></td>
+                    <td>{{ doacao.item.nome }}</td>
+                    <td>{{ doacao.quantidade }} {{ doacao.item.unidade_medida }}</td>
+                    <td>{{ doacao.data_doacao.strftime("%d/%m/%Y %H:%M") }}</td>
+                    <td>
+                        {% if doacao.observacao %}
+                            {{ doacao.observacao }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    
+    <div class="summary">
+        <h3>📈 Resumo</h3>
+        <ul>
+            <li><strong>Total de Itens:</strong> {{ lista.itens|length }}</li>
+            <li><strong>Total Arrecadado:</strong> {{ lista.total_arrecadado }}</li>
+            <li><strong>Percentual Geral:</strong> {{ "%.1f"|format(lista.percentual_conclusao) }}%</li>
+            <li><strong>Itens Completos:</strong> {{ lista.itens|selectattr('esta_completo')|list|length }}</li>
+            <li><strong>Total de Doações:</strong> {{ todas_doacoes|length }}</li>
+            <li><strong>Doadores Únicos:</strong> 
+                {% set doadores = [] %}
+                {% for item in lista.itens %}
+                    {% for doacao in item.doacoes %}
+                        {% if doacao.doador_nome not in doadores %}
+                            {% set _ = doadores.append(doacao.doador_nome) %}
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+                {{ doadores|length }}
+            </li>
+        </ul>
+    </div>
+    
+    <div class="footer">
+        <p>Relatório gerado em {{ datetime.now().strftime("%d/%m/%Y às %H:%M") }}</p>
+        <p>DoaFácil - Sistema de Arrecadações</p>
+    </div>
+</body>
+</html> 

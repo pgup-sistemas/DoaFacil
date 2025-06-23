@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Criar Lista - DoaFácil{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="columns is-centered">
+            <div class="column is-8">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-header-title">
+                            <h1 class="title is-3">
+                                <i class="fas fa-list mr-2"></i>
+                                Criar Nova Lista de Arrecadação
+                            </h1>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <!-- Unidade Info -->
+                        <div class="notification is-info is-light mb-4">
+                            <div class="media">
+                                <div class="media-left">
+                                    <span class="icon is-large">
+                                        <i class="fas fa-building fa-2x"></i>
+                                    </span>
+                                </div>
+                                <div class="media-content">
+                                    <h4 class="title is-5">{{ unidade.nome }}</h4>
+                                    <p class="subtitle is-6">
+                                        <i class="fas fa-user mr-1"></i>
+                                        Responsável: {{ unidade.responsavel }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <form method="POST">
+                            {{ form.hidden_tag() }}
+                            
+                            <div class="field">
+                                <label class="label">{{ form.nome.label }}</label>
+                                <div class="control has-icons-left">
+                                    {{ form.nome(class="input", placeholder="Ex: Arrecadação de Alimentos para Famílias") }}
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-list"></i>
+                                    </span>
+                                </div>
+                                {% if form.nome.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.nome.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="field">
+                                <label class="label">{{ form.descricao.label }}</label>
+                                <div class="control">
+                                    {{ form.descricao(class="textarea", placeholder="Descreva o objetivo da arrecadação, para quem será destinada, etc...") }}
+                                </div>
+                                {% if form.descricao.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.descricao.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="field">
+                                <label class="label">{{ form.modo.label }}</label>
+                                <div class="control">
+                                    <div class="select is-fullwidth">
+                                        {{ form.modo() }}
+                                    </div>
+                                </div>
+                                {% if form.modo.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.modo.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                                <p class="help">
+                                    <strong>Fechado:</strong> Você define todos os itens e quantidades<br>
+                                    <strong>Aberto:</strong> Os doadores podem sugerir itens adicionais
+                                </p>
+                            </div>
+                            
+                            <div class="field">
+                                <label class="label">
+                                    {{ form.aceita_pix.label }}
+                                </label>
+                                <div class="control">
+                                    <label class="checkbox">
+                                        {{ form.aceita_pix() }}
+                                        Aceitar doações financeiras via PIX
+                                    </label>
+                                </div>
+                                {% if form.aceita_pix.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.aceita_pix.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="field" id="pix-field" style="display: none;">
+                                <label class="label">{{ form.chave_pix.label }}</label>
+                                <div class="control has-icons-left">
+                                    {{ form.chave_pix(class="input", placeholder="Ex: 11999999999 ou email@exemplo.com") }}
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-qrcode"></i>
+                                    </span>
+                                </div>
+                                {% if form.chave_pix.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.chave_pix.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                                <p class="help">
+                                    Pode ser CPF, telefone, e-mail ou chave aleatória
+                                </p>
+                            </div>
+                            
+                            <div class="field is-grouped">
+                                <div class="control">
+                                    <button type="submit" class="button is-primary is-rounded">
+                                        <i class="fas fa-save mr-2"></i>
+                                        Criar Lista
+                                    </button>
+                                </div>
+                                <div class="control">
+                                    <a href="{{ url_for('main.index') }}" class="button is-light is-rounded">
+                                        <i class="fas fa-arrow-left mr-2"></i>
+                                        Voltar
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Tips -->
+                <div class="notification is-warning is-light mt-4">
+                    <div class="content">
+                        <h4 class="title is-5">
+                            <i class="fas fa-lightbulb mr-2"></i>
+                            Dicas para uma boa lista
+                        </h4>
+                        <ul>
+                            <li><strong>Nome claro:</strong> Deixe claro o objetivo da arrecadação</li>
+                            <li><strong>Descrição detalhada:</strong> Explique para quem será destinada</li>
+                            <li><strong>PIX:</strong> Facilita doações financeiras para compra de itens</li>
+                            <li><strong>Modo:</strong> Use "Fechado" para controle total, "Aberto" para flexibilidade</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const pixCheckbox = document.querySelector('input[name="aceita_pix"]');
+    const pixField = document.getElementById('pix-field');
+    
+    function togglePixField() {
+        if (pixCheckbox.checked) {
+            pixField.style.display = 'block';
+        } else {
+            pixField.style.display = 'none';
+        }
+    }
+    
+    pixCheckbox.addEventListener('change', togglePixField);
+    togglePixField(); // Initial state
+});
+</script>
+{% endblock %} 

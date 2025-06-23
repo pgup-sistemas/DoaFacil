@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Administrativo - DoaFácil{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<section class="hero is-primary is-bold">
+    <div class="hero-body">
+        <div class="container">
+            <div class="columns is-vcentered">
+                <div class="column is-8">
+                    <h1 class="title is-2 has-text-white">
+                        <i class="fas fa-tachometer-alt mr-3"></i>
+                        Dashboard Administrativo
+                    </h1>
+                    <h2 class="subtitle is-4 has-text-white">
+                        Bem-vindo, {{ session.get('admin_nome', 'Administrador') }}!
+                    </h2>
+                </div>
+                <div class="column is-4 has-text-centered">
+                    <div class="buttons">
+                        <a href="{{ url_for('main.cadastrar_unidade') }}" class="button is-white is-medium is-rounded">
+                            <i class="fas fa-plus mr-2"></i>
+                            Nova Unidade
+                        </a>
+                        <a href="{{ url_for('main.logout_admin') }}" class="button is-outlined is-white is-medium is-rounded">
+                            <i class="fas fa-sign-out-alt mr-2"></i>
+                            Sair
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats -->
+<section class="section">
+    <div class="container">
+        <div class="columns">
+            <div class="column is-3">
+                <div class="card">
+                    <div class="card-content has-text-centered">
+                        <div class="content">
+                            <span class="icon is-large has-text-info">
+                                <i class="fas fa-building fa-2x"></i>
+                            </span>
+                            <h4 class="title is-4">{{ unidades|length }}</h4>
+                            <p class="subtitle is-6">Unidades Cadastradas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-3">
+                <div class="card">
+                    <div class="card-content has-text-centered">
+                        <div class="content">
+                            <span class="icon is-large has-text-success">
+                                <i class="fas fa-list fa-2x"></i>
+                            </span>
+                            <h4 class="title is-4">
+                                {% set total_listas = 0 %}
+                                {% for unidade in unidades %}
+                                    {% set total_listas = total_listas + unidade.listas|length %}
+                                {% endfor %}
+                                {{ total_listas }}
+                            </h4>
+                            <p class="subtitle is-6">Total de Listas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-3">
+                <div class="card">
+                    <div class="card-content has-text-centered">
+                        <div class="content">
+                            <span class="icon is-large has-text-warning">
+                                <i class="fas fa-heart fa-2x"></i>
+                            </span>
+                            <h4 class="title is-4">
+                                {% set total_doacoes = 0 %}
+                                {% for unidade in unidades %}
+                                    {% for lista in unidade.listas %}
+                                        {% for item in lista.itens %}
+                                            {% set total_doacoes = total_doacoes + item.doacoes|length %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                {% endfor %}
+                                {{ total_doacoes }}
+                            </h4>
+                            <p class="subtitle is-6">Total de Doações</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-3">
+                <div class="card">
+                    <div class="card-content has-text-centered">
+                        <div class="content">
+                            <span class="icon is-large has-text-danger">
+                                <i class="fas fa-users fa-2x"></i>
+                            </span>
+                            <h4 class="title is-4">
+                                {% set doadores_unicos = [] %}
+                                {% for unidade in unidades %}
+                                    {% for lista in unidade.listas %}
+                                        {% for item in lista.itens %}
+                                            {% for doacao in item.doacoes %}
+                                                {% if doacao.doador_nome not in doadores_unicos %}
+                                                    {% set _ = doadores_unicos.append(doacao.doador_nome) %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                {% endfor %}
+                                {{ doadores_unicos|length }}
+                            </h4>
+                            <p class="subtitle is-6">Doadores Únicos</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Unidades -->
+<section class="section">
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-title">
+                    <h3 class="title is-4">
+                        <i class="fas fa-building mr-2"></i>
+                        Unidades Organizadoras
+                    </h3>
+                </div>
+                <div class="card-header-icon">
+                    <a href="{{ url_for('main.cadastrar_unidade') }}" class="button is-primary is-small">
+                        <i class="fas fa-plus mr-1"></i>
+                        Nova Unidade
+                    </a>
+                </div>
+            </div>
+            <div class="card-content">
+                {% if unidades %}
+                    <div class="table-container">
+                        <table class="table is-fullwidth is-striped">
+                            <thead>
+                                <tr>
+                                    <th>Unidade</th>
+                                    <th>Responsável</th>
+                                    <th>E-mail</th>
+                                    <th>Listas</th>
+                                    <th>Data de Criação</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for unidade in unidades %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ unidade.nome }}</strong>
+                                        {% if unidade.descricao %}
+                                            <br><small class="has-text-grey">{{ unidade.descricao }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ unidade.responsavel }}</td>
+                                    <td>
+                                        {% if unidade.email %}
+                                            <a href="mailto:{{ unidade.email }}">{{ unidade.email }}</a>
+                                        {% else %}
+                                            <span class="has-text-grey-light">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="tag is-info">{{ unidade.listas|length }}</span>
+                                    </td>
+                                    <td>{{ unidade.data_criacao.strftime("%d/%m/%Y") }}</td>
+                                    <td>
+                                        <div class="buttons are-small">
+                                            <a href="{{ url_for('main.criar_lista', unidade_id=unidade.id) }}" 
+                                               class="button is-success">
+                                                <i class="fas fa-plus mr-1"></i>
+                                                Nova Lista
+                                            </a>
+                                            {% if unidade.listas %}
+                                                <a href="#" class="button is-info">
+                                                    <i class="fas fa-eye mr-1"></i>
+                                                    Ver Listas
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="has-text-centered">
+                        <div class="notification is-info">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Nenhuma unidade cadastrada ainda.
+                        </div>
+                        <a href="{{ url_for('main.cadastrar_unidade') }}" class="button is-primary is-medium">
+                            <i class="fas fa-plus mr-2"></i>
+                            Cadastrar Primeira Unidade
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Lists -->
+<section class="section">
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-title">
+                    <h3 class="title is-4">
+                        <i class="fas fa-list mr-2"></i>
+                        Listas Recentes
+                    </h3>
+                </div>
+            </div>
+            <div class="card-content">
+                {% set todas_listas = [] %}
+                {% for unidade in unidades %}
+                    {% for lista in unidade.listas %}
+                        {% set _ = todas_listas.append(lista) %}
+                    {% endfor %}
+                {% endfor %}
+                
+                {% if todas_listas %}
+                    {% set listas_ordenadas = todas_listas|sort(attribute='data_criacao', reverse=true) %}
+                    <div class="columns is-multiline">
+                        {% for lista in listas_ordenadas %}
+                            {% if loop.index <= 6 %}
+                            <div class="column is-4">
+                                <div class="card">
+                                    <div class="card-content">
+                                        <h4 class="title is-5">{{ lista.nome }}</h4>
+                                        <p class="subtitle is-6">
+                                            <i class="fas fa-building mr-1"></i>
+                                            {{ lista.unidade.nome }}
+                                        </p>
+                                        
+                                        <div class="level">
+                                            <div class="level-left">
+                                                <div class="level-item">
+                                                    <div>
+                                                        <p class="heading">Progresso</p>
+                                                        <p class="title">{{ "%.1f"|format(lista.percentual_conclusao) }}%</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="level-right">
+                                                <div class="level-item">
+                                                    <div>
+                                                        <p class="heading">Itens</p>
+                                                        <p class="title">{{ lista.itens|length }}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <progress class="progress is-primary" value="{{ lista.percentual_conclusao }}" max="100"></progress>
+                                        
+                                        <div class="buttons are-small mt-3">
+                                            <a href="{{ url_for('main.visualizar_lista', slug=lista.slug) }}" 
+                                               class="button is-info">
+                                                <i class="fas fa-eye mr-1"></i>
+                                                Ver Pública
+                                            </a>
+                                            <a href="{{ url_for('main.dashboard', token=lista.token_admin) }}" 
+                                               class="button is-warning">
+                                                <i class="fas fa-cog mr-1"></i>
+                                                Admin
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="has-text-centered">
+                        <p class="has-text-grey">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Nenhuma lista criada ainda.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 

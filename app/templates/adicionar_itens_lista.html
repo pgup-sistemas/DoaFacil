@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Adicionar Itens - {{ lista.nome }}{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<section class="hero is-primary is-bold">
+    <div class="hero-body">
+        <div class="container">
+            <div class="columns is-vcentered">
+                <div class="column is-8">
+                    <h1 class="title is-2 has-text-white">
+                        <i class="fas fa-plus mr-3"></i>
+                        Adicionar Itens
+                    </h1>
+                    <h2 class="subtitle is-4 has-text-white">
+                        {{ lista.nome }} - {{ lista.unidade.nome }}
+                    </h2>
+                </div>
+                <div class="column is-4 has-text-centered">
+                    <div class="buttons">
+                        <a href="{{ url_for('main.dashboard', token=lista.token_admin) }}" class="button is-white is-medium is-rounded">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Voltar ao Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Form Section -->
+<section class="section">
+    <div class="container">
+        <div class="columns">
+            <!-- Form Column -->
+            <div class="column is-6">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-header-title">
+                            <h3 class="title is-4">
+                                <i class="fas fa-plus mr-2"></i>
+                                Novo Item
+                            </h3>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <form method="POST">
+                            {{ form.hidden_tag() }}
+                            
+                            <div class="field">
+                                <label class="label">{{ form.nome.label }}</label>
+                                <div class="control">
+                                    {{ form.nome(class="input", placeholder="Ex: Arroz, Feijão, Óleo...") }}
+                                </div>
+                                {% if form.nome.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.nome.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="columns">
+                                <div class="column is-6">
+                                    <div class="field">
+                                        <label class="label">{{ form.quantidade_necessaria.label }}</label>
+                                        <div class="control">
+                                            {{ form.quantidade_necessaria(class="input", type="number", min="1", placeholder="10") }}
+                                        </div>
+                                        {% if form.quantidade_necessaria.errors %}
+                                            <p class="help is-danger">
+                                                {% for error in form.quantidade_necessaria.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="column is-6">
+                                    <div class="field">
+                                        <label class="label">{{ form.unidade_medida.label }}</label>
+                                        <div class="control">
+                                            {{ form.unidade_medida(class="input", placeholder="kg, unidades, litros...") }}
+                                        </div>
+                                        {% if form.unidade_medida.errors %}
+                                            <p class="help is-danger">
+                                                {% for error in form.unidade_medida.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="field">
+                                <label class="label">{{ form.descricao.label }}</label>
+                                <div class="control">
+                                    {{ form.descricao(class="textarea", placeholder="Descrição opcional do item...") }}
+                                </div>
+                                {% if form.descricao.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.descricao.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="field">
+                                <div class="control">
+                                    <button type="submit" class="button is-primary is-fullwidth is-rounded">
+                                        <i class="fas fa-plus mr-2"></i>
+                                        Adicionar Item
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Current Items Column -->
+            <div class="column is-6">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-header-title">
+                            <h3 class="title is-4">
+                                <i class="fas fa-list mr-2"></i>
+                                Itens Atuais ({{ lista.itens|length }})
+                            </h3>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        {% if lista.itens %}
+                            <div class="table-container">
+                                <table class="table is-fullwidth is-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Quantidade</th>
+                                            <th>Progresso</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in lista.itens %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ item.nome }}</strong>
+                                                {% if item.descricao %}
+                                                    <br><small class="has-text-grey">{{ item.descricao }}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {{ item.quantidade_necessaria }} {{ item.unidade_medida }}
+                                            </td>
+                                            <td>
+                                                <div class="level">
+                                                    <div class="level-left">
+                                                        <div class="level-item">
+                                                            <div>
+                                                                <p class="heading">Arrecadado</p>
+                                                                <p class="title is-6">{{ item.quantidade_arrecadada }}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="level-right">
+                                                        <div class="level-item">
+                                                            <div>
+                                                                <p class="heading">Restante</p>
+                                                                <p class="title is-6">{{ item.quantidade_restante }}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <progress class="progress is-primary" value="{{ item.percentual_conclusao }}" max="100"></progress>
+                                                <small class="has-text-grey">{{ "%.1f"|format(item.percentual_conclusao) }}%</small>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="has-text-centered">
+                                <div class="notification is-info">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    Nenhum item cadastrado ainda.
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <div class="card-header-title">
+                            <h4 class="title is-5">
+                                <i class="fas fa-cog mr-2"></i>
+                                Ações Rápidas
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="buttons">
+                            <a href="{{ url_for('main.dashboard', token=lista.token_admin) }}" class="button is-info is-fullwidth">
+                                <i class="fas fa-tachometer-alt mr-2"></i>
+                                Voltar ao Dashboard
+                            </a>
+                            <a href="{{ url_for('main.visualizar_lista', slug=lista.slug) }}" class="button is-success is-fullwidth">
+                                <i class="fas fa-eye mr-2"></i>
+                                Ver Lista Pública
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 

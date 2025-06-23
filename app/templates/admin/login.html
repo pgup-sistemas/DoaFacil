@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Login Administrativo - DoaFácil{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="columns is-centered">
+            <div class="column is-4">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-header-title">
+                            <h1 class="title is-3">
+                                <i class="fas fa-user-shield mr-2"></i>
+                                Login Administrativo
+                            </h1>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <form method="POST">
+                            {{ form.hidden_tag() }}
+                            
+                            <div class="field">
+                                <label class="label">{{ form.username.label }}</label>
+                                <div class="control has-icons-left">
+                                    {{ form.username(class="input", placeholder="Nome de usuário") }}
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                </div>
+                                {% if form.username.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.username.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="field">
+                                <label class="label">{{ form.password.label }}</label>
+                                <div class="control has-icons-left">
+                                    {{ form.password(class="input", placeholder="Senha") }}
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                </div>
+                                {% if form.password.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.password.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="field">
+                                <div class="control">
+                                    <button type="submit" class="button is-primary is-fullwidth is-rounded">
+                                        <i class="fas fa-sign-in-alt mr-2"></i>
+                                        Entrar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Info -->
+                <div class="notification is-info is-light mt-4">
+                    <div class="content">
+                        <h4 class="title is-5">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Acesso Restrito
+                        </h4>
+                        <p>
+                            Esta área é restrita a administradores do sistema. 
+                            Entre em contato para solicitar acesso.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 

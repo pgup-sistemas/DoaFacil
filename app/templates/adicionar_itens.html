@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Adicionar Itens - DoaFácil{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="columns is-centered">
+            <div class="column is-8">
+                <!-- Lista Info -->
+                <div class="notification is-primary is-light mb-4">
+                    <div class="media">
+                        <div class="media-left">
+                            <span class="icon is-large">
+                                <i class="fas fa-list fa-2x"></i>
+                            </span>
+                        </div>
+                        <div class="media-content">
+                            <h4 class="title is-4">{{ lista.nome }}</h4>
+                            <p class="subtitle is-6">
+                                <i class="fas fa-building mr-1"></i>
+                                {{ lista.unidade.nome }} | 
+                                <i class="fas fa-cog mr-1"></i>
+                                Modo: {{ lista.modo.title() }}
+                            </p>
+                            {% if lista.descricao %}
+                                <p>{{ lista.descricao }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Form para adicionar itens -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-header-title">
+                            <h2 class="title is-4">
+                                <i class="fas fa-plus mr-2"></i>
+                                Adicionar Item
+                            </h2>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <form method="POST">
+                            {{ form.hidden_tag() }}
+                            
+                            <div class="columns">
+                                <div class="column is-6">
+                                    <div class="field">
+                                        <label class="label">{{ form.nome.label }}</label>
+                                        <div class="control has-icons-left">
+                                            {{ form.nome(class="input", placeholder="Ex: Arroz") }}
+                                            <span class="icon is-small is-left">
+                                                <i class="fas fa-box"></i>
+                                            </span>
+                                        </div>
+                                        {% if form.nome.errors %}
+                                            <p class="help is-danger">
+                                                {% for error in form.nome.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="column is-3">
+                                    <div class="field">
+                                        <label class="label">{{ form.quantidade_necessaria.label }}</label>
+                                        <div class="control">
+                                            {{ form.quantidade_necessaria(class="input", type="number", min="1", placeholder="10") }}
+                                        </div>
+                                        {% if form.quantidade_necessaria.errors %}
+                                            <p class="help is-danger">
+                                                {% for error in form.quantidade_necessaria.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="column is-3">
+                                    <div class="field">
+                                        <label class="label">{{ form.unidade_medida.label }}</label>
+                                        <div class="control">
+                                            {{ form.unidade_medida(class="input", placeholder="kg") }}
+                                        </div>
+                                        {% if form.unidade_medida.errors %}
+                                            <p class="help is-danger">
+                                                {% for error in form.unidade_medida.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="field">
+                                <label class="label">{{ form.descricao.label }}</label>
+                                <div class="control">
+                                    {{ form.descricao(class="textarea", placeholder="Descrição opcional do item...") }}
+                                </div>
+                                {% if form.descricao.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.descricao.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="field is-grouped">
+                                <div class="control">
+                                    <button type="submit" class="button is-primary is-rounded">
+                                        <i class="fas fa-plus mr-2"></i>
+                                        Adicionar Item
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Lista de itens já adicionados -->
+                {% if lista.itens %}
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <div class="card-header-title">
+                                <h3 class="title is-4">
+                                    <i class="fas fa-list-ul mr-2"></i>
+                                    Itens da Lista ({{ lista.itens|length }})
+                                </h3>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="table-container">
+                                <table class="table is-fullwidth is-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Quantidade Necessária</th>
+                                            <th>Unidade</th>
+                                            <th>Descrição</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in lista.itens %}
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ item.nome }}</strong>
+                                                </td>
+                                                <td>{{ item.quantidade_necessaria }}</td>
+                                                <td>{{ item.unidade_medida }}</td>
+                                                <td>
+                                                    {% if item.descricao %}
+                                                        {{ item.descricao }}
+                                                    {% else %}
+                                                        <span class="has-text-grey-light">-</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <!-- Finalizar -->
+                <div class="card mt-4">
+                    <div class="card-content">
+                        <div class="content has-text-centered">
+                            <h4 class="title is-4">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                Próximos Passos
+                            </h4>
+                            <p class="subtitle is-6">
+                                Após adicionar todos os itens, você receberá os links para compartilhar sua lista.
+                            </p>
+                            
+                            <div class="buttons is-centered">
+                                {% if lista.itens %}
+                                    <a href="{{ url_for('main.visualizar_lista', slug=lista.slug) }}" class="button is-success is-rounded">
+                                        <i class="fas fa-eye mr-2"></i>
+                                        Visualizar Lista
+                                    </a>
+                                    <a href="{{ url_for('main.dashboard', token=lista.token_admin) }}" class="button is-info is-rounded">
+                                        <i class="fas fa-tachometer-alt mr-2"></i>
+                                        Dashboard Admin
+                                    </a>
+                                {% else %}
+                                    <p class="has-text-grey">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Adicione pelo menos um item para continuar
+                                    </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tips -->
+                <div class="notification is-warning is-light mt-4">
+                    <div class="content">
+                        <h4 class="title is-5">
+                            <i class="fas fa-lightbulb mr-2"></i>
+                            Dicas para os itens
+                        </h4>
+                        <ul>
+                            <li><strong>Nome claro:</strong> Use nomes que todos entendam</li>
+                            <li><strong>Quantidade realista:</strong> Defina quantidades que fazem sentido</li>
+                            <li><strong>Unidade de medida:</strong> kg, unidades, litros, etc.</li>
+                            <li><strong>Descrição:</strong> Adicione detalhes quando necessário</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 

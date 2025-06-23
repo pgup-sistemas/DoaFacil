@@ -1,0 +1,374 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - {{ lista.nome }}{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<section class="hero is-primary is-bold">
+    <div class="hero-body">
+        <div class="container">
+            <div class="columns is-vcentered">
+                <div class="column is-8">
+                    <h1 class="title is-2 has-text-white">
+                        <i class="fas fa-tachometer-alt mr-3"></i>
+                        Dashboard Administrativo
+                    </h1>
+                    <h2 class="subtitle is-4 has-text-white">{{ lista.nome }}</h2>
+                    <p class="has-text-white">
+                        <i class="fas fa-building mr-2"></i>
+                        {{ lista.unidade.nome }} | 
+                        <i class="fas fa-calendar mr-2"></i>
+                        Criada em {{ lista.data_criacao.strftime("%d/%m/%Y") }}
+                    </p>
+                </div>
+                <div class="column is-4 has-text-centered">
+                    <div class="box has-background-white">
+                        <h3 class="title is-3 has-text-primary">{{ "%.1f"|format(lista.percentual_conclusao) }}%</h3>
+                        <p class="subtitle is-6">Progresso Geral</p>
+                        <progress class="progress is-primary" value="{{ lista.percentual_conclusao }}" max="100"></progress>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Cards -->
+<section class="section">
+    <div class="container">
+        <div class="columns">
+            <div class="column is-3">
+                <div class="card">
+                    <div class="card-content has-text-centered">
+                        <div class="content">
+                            <span class="icon is-large has-text-info">
+                                <i class="fas fa-box fa-2x"></i>
+                            </span>
+                            <h4 class="title is-4">{{ lista.itens|length }}</h4>
+                            <p class="subtitle is-6">Total de Itens</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-3">
+                <div class="card">
+                    <div class="card-content has-text-centered">
+                        <div class="content">
+                            <span class="icon is-large has-text-success">
+                                <i class="fas fa-heart fa-2x"></i>
+                            </span>
+                            <h4 class="title is-4">{{ lista.total_arrecadado }}</h4>
+                            <p class="subtitle is-6">Total Arrecadado</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-3">
+                <div class="card">
+                    <div class="card-content has-text-centered">
+                        <div class="content">
+                            <span class="icon is-large has-text-warning">
+                                <i class="fas fa-users fa-2x"></i>
+                            </span>
+                            <h4 class="title is-4">
+                                {% set doadores = [] %}
+                                {% for item in lista.itens %}
+                                    {% for doacao in item.doacoes %}
+                                        {% if doacao.doador_nome not in doadores %}
+                                            {% set _ = doadores.append(doacao.doador_nome) %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endfor %}
+                                {{ doadores|length }}
+                            </h4>
+                            <p class="subtitle is-6">Doadores Únicos</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-3">
+                <div class="card">
+                    <div class="card-content has-text-centered">
+                        <div class="content">
+                            <span class="icon is-large has-text-danger">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </span>
+                            <h4 class="title is-4">
+                                {% set completos = lista.itens|selectattr('esta_completo')|list|length %}
+                                {{ completos }}
+                            </h4>
+                            <p class="subtitle is-6">Itens Completos</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Items Table -->
+<section class="section">
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-title">
+                    <h3 class="title is-4">
+                        <i class="fas fa-list-ul mr-2"></i>
+                        Itens e Progresso
+                    </h3>
+                </div>
+            </div>
+            <div class="card-content">
+                <div class="table-container">
+                    <table class="table is-fullwidth is-striped">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Necessário</th>
+                                <th>Arrecadado</th>
+                                <th>Restante</th>
+                                <th>Progresso</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in lista.itens %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.nome }}</strong>
+                                    {% if item.descricao %}
+                                        <br><small class="has-text-grey">{{ item.descricao }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.quantidade_necessaria }} {{ item.unidade_medida }}</td>
+                                <td>{{ item.quantidade_arrecadada }} {{ item.unidade_medida }}</td>
+                                <td>{{ item.quantidade_restante }} {{ item.unidade_medida }}</td>
+                                <td>
+                                    <progress class="progress {{ 'is-success' if item.esta_completo else 'is-warning' if item.percentual_conclusao >= 75 else 'is-info' if item.percentual_conclusao >= 50 else 'is-danger' }}" 
+                                              value="{{ item.percentual_conclusao }}" max="100" style="width: 100px;">
+                                        {{ "%.1f"|format(item.percentual_conclusao) }}%
+                                    </progress>
+                                    <small>{{ "%.1f"|format(item.percentual_conclusao) }}%</small>
+                                </td>
+                                <td>
+                                    {% if item.esta_completo %}
+                                        <span class="tag is-success">
+                                            <i class="fas fa-check mr-1"></i>
+                                            Completo
+                                        </span>
+                                    {% elif item.percentual_conclusao >= 75 %}
+                                        <span class="tag is-warning">
+                                            <i class="fas fa-clock mr-1"></i>
+                                            Quase Lá
+                                        </span>
+                                    {% else %}
+                                        <span class="tag is-danger">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                                            Precisa
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Donations List -->
+<section class="section">
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-title">
+                    <h3 class="title is-4">
+                        <i class="fas fa-heart mr-2"></i>
+                        Últimas Doações
+                    </h3>
+                </div>
+            </div>
+            <div class="card-content">
+                {% set todas_doacoes = [] %}
+                {% for item in lista.itens %}
+                    {% for doacao in item.doacoes %}
+                        {% set _ = todas_doacoes.append(doacao) %}
+                    {% endfor %}
+                {% endfor %}
+                
+                {% if todas_doacoes %}
+                    {% set doacoes_ordenadas = todas_doacoes|sort(attribute='data_doacao', reverse=true) %}
+                    <div class="table-container">
+                        <table class="table is-fullwidth is-striped">
+                            <thead>
+                                <tr>
+                                    <th>Doador</th>
+                                    <th>Item</th>
+                                    <th>Quantidade</th>
+                                    <th>Data</th>
+                                    <th>Observação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doacao in doacoes_ordenadas %}
+                                    {% if loop.index <= 10 %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ doacao.doador_nome }}</strong>
+                                    </td>
+                                    <td>{{ doacao.item.nome }}</td>
+                                    <td>{{ doacao.quantidade }} {{ doacao.item.unidade_medida }}</td>
+                                    <td>{{ doacao.data_doacao.strftime("%d/%m/%Y %H:%M") }}</td>
+                                    <td>
+                                        {% if doacao.observacao %}
+                                            {{ doacao.observacao }}
+                                        {% else %}
+                                            <span class="has-text-grey-light">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="has-text-centered">
+                        <p class="has-text-grey">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Nenhuma doação registrada ainda.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Actions -->
+<section class="section has-background-light">
+    <div class="container">
+        <div class="columns">
+            <div class="column is-6">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-header-title">
+                            <h4 class="title is-5">
+                                <i class="fas fa-share-alt mr-2"></i>
+                                Compartilhar Lista
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="field">
+                            <label class="label">Link Público</label>
+                            <div class="control has-icons-right">
+                                <input class="input" type="text" value="{{ request.host_url }}lista/{{ lista.slug }}" readonly>
+                                <span class="icon is-small is-right">
+                                    <i class="fas fa-copy" onclick="copyToClipboard('{{ request.host_url }}lista/{{ lista.slug }}')" style="cursor: pointer;"></i>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="buttons">
+                            <a href="https://wa.me/?text=Ajude%20nossa%20arrecadação!%20{{ lista.nome }}%20-%20{{ request.host_url }}lista/{{ lista.slug }}" 
+                               target="_blank" class="button is-success is-small">
+                                <i class="fab fa-whatsapp mr-1"></i>
+                                WhatsApp
+                            </a>
+                            <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.host_url }}lista/{{ lista.slug }}" 
+                               target="_blank" class="button is-info is-small">
+                                <i class="fab fa-facebook mr-1"></i>
+                                Facebook
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-6">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-header-title">
+                            <h4 class="title is-5">
+                                <i class="fas fa-download mr-2"></i>
+                                Exportar Dados
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="buttons">
+                            <a href="{{ url_for('main.exportar_csv', slug=lista.slug) }}" class="button is-info is-fullwidth">
+                                <i class="fas fa-file-csv mr-2"></i>
+                                Exportar CSV
+                            </a>
+                            <a href="{{ url_for('main.exportar_pdf', slug=lista.slug) }}" class="button is-danger is-fullwidth">
+                                <i class="fas fa-file-pdf mr-2"></i>
+                                Exportar PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <div class="card-header-title">
+                            <h4 class="title is-5">
+                                <i class="fas fa-cog mr-2"></i>
+                                Gerenciar Lista
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="buttons">
+                            <a href="{{ url_for('main.adicionar_itens_lista', token=lista.token_admin) }}" class="button is-success is-fullwidth">
+                                <i class="fas fa-plus mr-2"></i>
+                                Adicionar Itens
+                            </a>
+                            <a href="{{ url_for('main.editar_lista', token=lista.token_admin) }}" class="button is-warning is-fullwidth">
+                                <i class="fas fa-edit mr-2"></i>
+                                Editar Lista
+                            </a>
+                            <a href="{{ url_for('main.visualizar_lista', slug=lista.slug) }}" class="button is-primary is-fullwidth">
+                                <i class="fas fa-eye mr-2"></i>
+                                Visualizar Pública
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Show success message
+        const notification = document.createElement('div');
+        notification.className = 'notification is-success is-light';
+        notification.innerHTML = `
+            <button class="delete" onclick="this.parentElement.remove()"></button>
+            <i class="fas fa-check mr-2"></i>
+            Link copiado para a área de transferência!
+        `;
+        
+        document.querySelector('.container').insertBefore(notification, document.querySelector('.container').firstChild);
+        
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 3000);
+    });
+}
+</script>
+{% endblock %} 
