@@ -146,33 +146,15 @@
     align-items: center;
     justify-content: center;
     z-index: 9999 !important;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    background-color: rgba(0, 0, 0, 0.5) !important;
 }
 
 #donate-modal .modal-background {
     z-index: 9998 !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    background-color: rgba(0, 0, 0, 0.5) !important;
 }
 
 #donate-modal .modal-card {
     z-index: 10000 !important;
-    position: relative !important;
-    max-width: 90% !important;
-    max-height: 90% !important;
-    margin: auto !important;
-    background: white !important;
-    border-radius: 6px !important;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3) !important;
+    position: relative;
 }
 
 .progress-bar {
@@ -259,6 +241,14 @@
     </div>
 </section>
 
+<!-- Botão de teste temporário -->
+<div class="container mt-4">
+    <button class="button is-warning" onclick="testModal()">
+        <i class="fas fa-bug mr-2"></i>
+        Testar Modal
+    </button>
+</div>
+
 <!-- PIX Section -->
 {% if lista.aceita_pix and lista.chave_pix %}
 <section class="section has-background-warning is-light">
@@ -333,18 +323,11 @@
                                     <span class="has-text-weight-semibold">
                                         {{ item.quantidade_arrecadada }} {{ item.unidade_medida }}
                                     </span>
-                                    {% if item.valor_financeiro_arrecadado > 0 %}
-                                        <br>
-                                        <small class="has-text-success">
-                                            <i class="fas fa-money-bill-wave mr-1"></i>
-                                            R$ {{ "%.2f"|format(item.valor_financeiro_arrecadado) }} em PIX
-                                        </small>
-                                    {% endif %}
                                     {% if item.doacoes %}
                                         <br>
                                         <small class="has-text-grey">
-                                            {% set pix_count = item.doacoes|selectattr('tipo_doacao', 'equalto', 'dinheiro')|list|length %}
-                                            {% set item_count = item.doacoes|selectattr('tipo_doacao', 'equalto', 'item')|list|length %}
+                                            {% set pix_count = item.doacoes|selectattr('tipo_pagamento', 'equalto', 'pix')|list|length %}
+                                            {% set item_count = item.doacoes|selectattr('tipo_pagamento', 'equalto', 'item')|list|length %}
                                             {% if pix_count > 0 %}
                                                 <span class="tag is-success is-small mr-1">
                                                     <i class="fas fa-qrcode mr-1"></i>
@@ -380,10 +363,11 @@
                                 </td>
                                 <td>
                                     {% if not item.esta_completo and not lista.concluida and not lista.cancelada %}
-                                        <a href="{{ url_for('main.doar_pagina', slug=lista.slug, item_id=item.id) }}" class="button is-primary is-small is-rounded">
+                                        <button class="button is-primary is-small is-rounded" 
+                                                onclick="openDonateModal({{ item.id }}, '{{ item.nome }}', {{ item.quantidade_restante }}, '{{ item.unidade_medida }}')">
                                             <i class="fas fa-heart mr-1"></i>
                                             Doar
-                                        </a>
+                                        </button>
                                     {% elif lista.concluida %}
                                         <span class="tag is-success is-small">
                                             <i class="fas fa-check mr-1"></i>
@@ -460,12 +444,6 @@
                                         <div>
                                             <p class="heading is-7">Arrecadado</p>
                                             <p class="title is-6">{{ item.quantidade_arrecadada }} {{ item.unidade_medida }}</p>
-                                            {% if item.valor_financeiro_arrecadado > 0 %}
-                                                <small class="has-text-success">
-                                                    <i class="fas fa-money-bill-wave mr-1"></i>
-                                                    R$ {{ "%.2f"|format(item.valor_financeiro_arrecadado) }}
-                                                </small>
-                                            {% endif %}
                                         </div>
                                     </div>
                                 </div>
@@ -479,10 +457,11 @@
                     </div>
                     <div class="column is-4 has-text-centered">
                         {% if not item.esta_completo and not lista.concluida and not lista.cancelada %}
-                            <a href="{{ url_for('main.doar_pagina', slug=lista.slug, item_id=item.id) }}" class="button is-primary is-small is-rounded is-fullwidth">
+                            <button class="button is-primary is-small is-rounded is-fullwidth" 
+                                    onclick="openDonateModal({{ item.id }}, '{{ item.nome }}', {{ item.quantidade_restante }}, '{{ item.unidade_medida }}')">
                                 <i class="fas fa-heart mr-1"></i>
                                 Doar
-                            </a>
+                            </button>
                         {% elif lista.concluida %}
                             <span class="tag is-success is-medium">
                                 <i class="fas fa-check mr-1"></i>
@@ -516,6 +495,127 @@
     </div>
 </section>
 
+<!-- Donate Modal -->
+<div id="donate-modal" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head has-background-primary">
+            <p class="modal-card-title has-text-white">
+                <i class="fas fa-heart mr-2"></i>
+                Fazer Doação
+            </p>
+            <button class="delete" aria-label="close" onclick="closeDonateModal()"></button>
+        </header>
+        <form method="POST" action="{{ url_for('main.doar', slug=lista.slug) }}">
+            {{ form.hidden_tag() }}
+            <section class="modal-card-body">
+                <div class="content">
+                    <!-- Item Info -->
+                    <div class="notification is-primary is-light mb-4">
+                        <div class="media">
+                            <div class="media-left">
+                                <span class="icon is-large">
+                                    <i class="fas fa-box fa-2x"></i>
+                                </span>
+                            </div>
+                            <div class="media-content">
+                                <h4 id="modal-item-name" class="title is-4"></h4>
+                                <p id="modal-item-info" class="subtitle is-6"></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="field">
+                        <label class="label">{{ form.doador_nome.label }}</label>
+                        <div class="control has-icons-left">
+                            {{ form.doador_nome(class="input", placeholder="Seu nome") }}
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-user"></i>
+                            </span>
+                        </div>
+                        {% if form.doador_nome.errors %}
+                            <p class="help is-danger">
+                                {% for error in form.doador_nome.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="field">
+                        <label class="label">{{ form.tipo_pagamento.label }}</label>
+                        <div class="control has-icons-left">
+                            <div class="select is-fullwidth">
+                                {{ form.tipo_pagamento() }}
+                            </div>
+                        </div>
+                        {% if form.tipo_pagamento.errors %}
+                            <p class="help is-danger">
+                                {% for error in form.tipo_pagamento.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+                        <p class="help">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            <strong>Item Físico:</strong> Você doará o item físico | 
+                            <strong>PIX:</strong> Doação financeira para compra do item
+                        </p>
+                    </div>
+                    
+                    <div class="field">
+                        <label class="label">{{ form.quantidade.label }}</label>
+                        <div class="control has-icons-left">
+                            {{ form.quantidade(class="input", type="number", min="1", id="modal-quantidade") }}
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-calculator"></i>
+                            </span>
+                        </div>
+                        {% if form.quantidade.errors %}
+                            <p class="help is-danger">
+                                {% for error in form.quantidade.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+                        <p class="help">
+                            <i class="fas fa-chart-line mr-1"></i>
+                            Máximo disponível: <span id="modal-max-quantidade" class="has-text-weight-bold has-text-primary"></span>
+                        </p>
+                    </div>
+                    
+                    <div class="field">
+                        <label class="label">{{ form.observacao.label }}</label>
+                        <div class="control">
+                            {{ form.observacao(class="textarea", placeholder="Observação opcional...") }}
+                        </div>
+                        {% if form.observacao.errors %}
+                            <p class="help is-danger">
+                                {% for error in form.observacao.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+                    </div>
+                    
+                    <input type="hidden" name="item_id" id="modal-item-id">
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <div class="buttons is-centered is-fullwidth">
+                    <button type="submit" class="button is-primary is-rounded is-medium">
+                        <i class="fas fa-heart mr-2"></i>
+                        Confirmar Doação
+                    </button>
+                    <button type="button" class="button is-light is-rounded is-medium" onclick="closeDonateModal()">
+                        Cancelar
+                    </button>
+                </div>
+            </footer>
+        </form>
+    </div>
+</div>
+
 <!-- Share Section -->
 <section class="section has-background-light">
     <div class="container">
@@ -524,14 +624,12 @@
             <p class="subtitle is-5">Ajude a divulgar esta arrecadação</p>
             
             <div class="buttons is-centered">
-                {% set whatsapp_url = generate_whatsapp_share_url_with_unidade(lista) %}
-                <a href="{{ whatsapp_url }}{{ request.url }}" 
+                <a href="https://wa.me/?text=Ajude%20nossa%20arrecadação!%20{{ lista.nome }}%20-%20{{ request.url }}" 
                    target="_blank" class="button is-success is-rounded">
                     <i class="fab fa-whatsapp mr-2"></i>
                     WhatsApp
                 </a>
-                {% set facebook_url = generate_facebook_share_url_with_unidade(lista) %}
-                <a href="{{ facebook_url }}{{ request.url }}" 
+                <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url }}" 
                    target="_blank" class="button is-info is-rounded">
                     <i class="fab fa-facebook mr-2"></i>
                     Facebook
@@ -541,40 +639,6 @@
                     Copiar Link
                 </button>
             </div>
-            
-            <!-- Links das redes sociais da unidade -->
-            {% set social_links = get_unidade_social_links(lista) %}
-            {% if social_links %}
-                <div class="mt-4">
-                    <p class="subtitle is-6">Entre em contato com {{ lista.unidade.nome }}:</p>
-                    <div class="buttons is-centered">
-                        {% if social_links.whatsapp %}
-                            <a href="{{ social_links.whatsapp }}" target="_blank" class="button is-success is-small is-rounded">
-                                <i class="fab fa-whatsapp mr-1"></i>
-                                WhatsApp
-                            </a>
-                        {% endif %}
-                        {% if social_links.facebook %}
-                            <a href="{{ social_links.facebook }}" target="_blank" class="button is-info is-small is-rounded">
-                                <i class="fab fa-facebook mr-1"></i>
-                                Facebook
-                            </a>
-                        {% endif %}
-                        {% if social_links.instagram %}
-                            <a href="{{ social_links.instagram }}" target="_blank" class="button is-danger is-small is-rounded">
-                                <i class="fab fa-instagram mr-1"></i>
-                                Instagram
-                            </a>
-                        {% endif %}
-                        {% if social_links.website %}
-                            <a href="{{ social_links.website }}" target="_blank" class="button is-dark is-small is-rounded">
-                                <i class="fas fa-globe mr-1"></i>
-                                Website
-                            </a>
-                        {% endif %}
-                    </div>
-                </div>
-            {% endif %}
         </div>
     </div>
 </section>
@@ -727,148 +791,10 @@
     </div>
 </section>
 {% endif %}
-
-<!-- Informações da Unidade -->
-<div class="notification is-info is-light mb-4">
-    <div class="media">
-        <div class="media-left">
-            <span class="icon is-large">
-                <i class="fas fa-building fa-2x"></i>
-            </span>
-        </div>
-        <div class="media-content">
-            <h4 class="title is-4">{{ lista.unidade.nome }}</h4>
-            {% if lista.unidade.descricao %}
-                <p class="subtitle is-6">{{ lista.unidade.descricao }}</p>
-            {% endif %}
-            <p>
-                <strong>Responsável:</strong> {{ lista.unidade.responsavel }}<br>
-                {% if lista.unidade.email %}
-                    <strong>Email:</strong> {{ lista.unidade.email }}<br>
-                {% endif %}
-                {% if lista.unidade.telefone_fixo %}
-                    <strong>Telefone:</strong> {{ lista.unidade.telefone_fixo }}<br>
-                {% endif %}
-                {% if lista.unidade.whatsapp_numero %}
-                    <strong>WhatsApp:</strong> {{ lista.unidade.whatsapp_numero }}<br>
-                {% endif %}
-                {% if lista.unidade.endereco_completo != 'Endereço não informado' %}
-                    <strong>Endereço:</strong> {{ lista.unidade.endereco_completo }}<br>
-                {% endif %}
-                {% if lista.unidade.horario_funcionamento %}
-                    <strong>Horário:</strong> {{ lista.unidade.horario_funcionamento }}
-                {% endif %}
-            </p>
-        </div>
-    </div>
-</div>
-
-<!-- Mapa da Localização -->
-{% if lista.unidade.coordenadas_lat and lista.unidade.coordenadas_lng %}
-<div class="notification is-light mb-4">
-    <h5 class="title is-5">
-        <i class="fas fa-map-marker-alt mr-2"></i>
-        Localização
-    </h5>
-    <div id="map" style="height: 300px; width: 100%; border-radius: 8px; margin-top: 10px;"></div>
-    <p class="help mt-2">
-        <i class="fas fa-info-circle mr-1"></i>
-        Clique no mapa para abrir no Google Maps e obter direções.
-    </p>
-</div>
-
-<script>
-function initMap() {
-    const location = {
-        lat: {{ lista.unidade.coordenadas_lat }},
-        lng: {{ lista.unidade.coordenadas_lng }}
-    };
-    
-    const map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 15,
-        center: location,
-        mapTypeId: google.maps.MapTypeId.ROADMAP
-    });
-    
-    const marker = new google.maps.Marker({
-        position: location,
-        map: map,
-        title: '{{ lista.unidade.nome }}',
-        animation: google.maps.Animation.DROP
-    });
-    
-    const infoWindow = new google.maps.InfoWindow({
-        content: `
-            <div style="padding: 10px;">
-                <h4 style="margin: 0 0 5px 0; color: #3273dc;">{{ lista.unidade.nome }}</h4>
-                <p style="margin: 0; color: #666;">{{ lista.unidade.endereco_completo }}</p>
-                <a href="https://www.google.com/maps/dir/?api=1&destination={{ lista.unidade.coordenadas_lat }},{{ lista.unidade.coordenadas_lng }}" 
-                   target="_blank" style="color: #3273dc; text-decoration: none;">
-                    Obter direções →
-                </a>
-            </div>
-        `
-    });
-    
-    marker.addListener('click', () => {
-        infoWindow.open(map, marker);
-    });
-    
-    // Abrir info window automaticamente
-    infoWindow.open(map, marker);
-}
-</script>
-<script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap">
-</script>
-{% endif %}
 {% endblock %}
 
 {% block extra_js %}
 <script>
-console.log('JavaScript carregado!');
-
-// Teste simples para verificar se o modal existe
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('=== INÍCIO: DOMContentLoaded ===');
-    
-    // Verificar se houve uma doação bem-sucedida através da URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const doacaoSucesso = urlParams.get('doacao_sucesso');
-    
-    if (doacaoSucesso === 'true') {
-        console.log('Doação bem-sucedida detectada! Recarregando página...');
-        setTimeout(() => {
-            window.location.reload();
-        }, 2000);
-    }
-    
-    const modal = document.getElementById('donate-modal');
-    console.log('Modal encontrado:', modal);
-    
-    if (modal) {
-        console.log('Modal existe e está pronto para uso');
-        
-        // Adicionar evento de clique no background do modal
-        const modalBackground = modal.querySelector('.modal-background');
-        if (modalBackground) {
-            modalBackground.addEventListener('click', closeDonateModal);
-        }
-        
-        // Fechar modal com ESC
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && modal.classList.contains('is-active')) {
-                closeDonateModal();
-            }
-        });
-        
-        console.log('Eventos do modal configurados com sucesso');
-    } else {
-        console.error('Modal não encontrado!');
-    }
-    console.log('=== FIM: DOMContentLoaded ===');
-});
-
 function testModal() {
     console.log('Função de teste chamada');
     alert('JavaScript está funcionando!');
@@ -892,64 +818,65 @@ function openDonateModal(itemId, itemName, maxQuantity, unit) {
     const form = document.querySelector('#donate-modal form');
     if (form) {
         form.reset();
+        console.log('Formulário resetado');
     }
     
-    // Atualizar campos do modal
-    const modalItemId = document.getElementById('modal-item-id');
-    const modalItemName = document.getElementById('modal-item-name');
-    const modalItemInfo = document.getElementById('modal-item-info');
-    const modalQuantidade = document.getElementById('modal-quantidade');
-    const modalMaxQuantidade = document.getElementById('modal-max-quantidade');
+    // Limpar campos específicos
+    document.getElementById('modal-item-id').value = itemId;
+    document.getElementById('modal-item-name').textContent = itemName;
+    document.getElementById('modal-item-info').textContent = 'Máximo disponível: ' + maxQuantity + ' ' + unit;
+    document.getElementById('modal-quantidade').max = maxQuantity;
+    document.getElementById('modal-max-quantidade').textContent = maxQuantity + ' ' + unit;
     
-    if (modalItemId) modalItemId.value = itemId;
-    if (modalItemName) modalItemName.textContent = itemName;
-    if (modalItemInfo) modalItemInfo.textContent = 'Máximo disponível: ' + maxQuantity + ' ' + unit;
-    if (modalQuantidade) modalQuantidade.max = maxQuantity;
-    if (modalMaxQuantidade) modalMaxQuantidade.textContent = maxQuantity + ' ' + unit;
-    
-    // Reset do select de tipo de pagamento
+    // Reset do select de tipo de pagamento para valor padrão
     const tipoPagamentoSelect = document.querySelector('select[name="tipo_pagamento"]');
     if (tipoPagamentoSelect) {
         tipoPagamentoSelect.value = 'item';
     }
     
-    // Abrir o modal
     const modal = document.getElementById('donate-modal');
+    console.log('Modal encontrado:', modal);
+    
     if (modal) {
         modal.classList.add('is-active');
+        console.log('Classe is-active adicionada');
+        
+        // Garantir que o modal seja visível
         modal.style.display = 'flex';
         modal.style.alignItems = 'center';
         modal.style.justifyContent = 'center';
+        console.log('Estilos de display aplicados');
         
         // Focar no primeiro campo
         setTimeout(() => {
             const nomeField = document.querySelector('#donate-modal input[name="doador_nome"]');
             if (nomeField) {
                 nomeField.focus();
+                console.log('Campo nome focado');
             }
         }, 100);
         
         // Prevenir scroll do body
         document.body.style.overflow = 'hidden';
         console.log('Modal aberto com sucesso');
+    } else {
+        console.error('Modal não encontrado!');
     }
 }
 
 function closeDonateModal() {
     const modal = document.getElementById('donate-modal');
-    if (modal) {
-        modal.classList.remove('is-active');
-        modal.style.display = 'none';
-        
-        // Reset do formulário ao fechar
-        const form = document.querySelector('#donate-modal form');
-        if (form) {
-            form.reset();
-        }
-        
-        // Restaurar scroll do body
-        document.body.style.overflow = 'auto';
+    modal.classList.remove('is-active');
+    modal.style.display = 'none';
+    
+    // Reset do formulário ao fechar
+    const form = document.querySelector('#donate-modal form');
+    if (form) {
+        form.reset();
     }
+    
+    // Restaurar scroll do body
+    document.body.style.overflow = 'auto';
 }
 
 function copyLink() {
@@ -973,6 +900,25 @@ function copyLink() {
         }, 3000);
     });
 }
+
+// Close modal when clicking on background
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('donate-modal');
+    modal.querySelector('.modal-background').addEventListener('click', closeDonateModal);
+    
+    // Reset do formulário quando a página carrega
+    const form = document.querySelector('#donate-modal form');
+    if (form) {
+        form.reset();
+    }
+    
+    // Fechar modal com ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.classList.contains('is-active')) {
+            closeDonateModal();
+        }
+    });
+});
 
 function openSugestaoModal() {
     const modal = document.getElementById('sugestao-modal');

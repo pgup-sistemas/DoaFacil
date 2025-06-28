@@ -25,6 +25,19 @@ def create_app(config_class=Config):
     from app.api import api_bp
     app.register_blueprint(api_bp, url_prefix='/api')
     
+    # Registrar funções utilitárias no contexto do Jinja2
+    from app.utils import (
+        generate_whatsapp_share_url_with_unidade,
+        generate_facebook_share_url_with_unidade,
+        get_unidade_social_links
+    )
+    
+    app.jinja_env.globals.update({
+        'generate_whatsapp_share_url_with_unidade': generate_whatsapp_share_url_with_unidade,
+        'generate_facebook_share_url_with_unidade': generate_facebook_share_url_with_unidade,
+        'get_unidade_social_links': get_unidade_social_links
+    })
+    
     # Criar tabelas
     with app.app_context():
         db.create_all()

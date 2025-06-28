@@ -210,6 +210,7 @@
                                     <th>Doador</th>
                                     <th>Item</th>
                                     <th>Quantidade</th>
+                                    <th>Tipo</th>
                                     <th>Data</th>
                                     <th>Observação</th>
                                 </tr>
@@ -222,7 +223,24 @@
                                         <strong>{{ doacao.doador_nome }}</strong>
                                     </td>
                                     <td>{{ doacao.item.nome }}</td>
-                                    <td>{{ doacao.quantidade }} {{ doacao.item.unidade_medida }}</td>
+                                    <td>
+                                        <span class="has-text-weight-semibold has-text-primary">
+                                            {{ doacao.quantidade }} {{ doacao.item.unidade_medida }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if doacao.tipo_pagamento == 'pix' %}
+                                            <span class="tag is-success is-small">
+                                                <i class="fas fa-qrcode mr-1"></i>
+                                                PIX
+                                            </span>
+                                        {% else %}
+                                            <span class="tag is-info is-small">
+                                                <i class="fas fa-box mr-1"></i>
+                                                Físico
+                                            </span>
+                                        {% endif %}
+                                    </td>
                                     <td>{{ doacao.data_doacao.strftime("%d/%m/%Y %H:%M") }}</td>
                                     <td>
                                         {% if doacao.observacao %}
@@ -330,6 +348,12 @@
                                 <i class="fas fa-plus mr-2"></i>
                                 Adicionar Itens
                             </a>
+                            {% if lista.modo == 'aberto' %}
+                            <a href="{{ url_for('main.gerenciar_sugestoes', token=lista.token_admin) }}" class="button is-info is-fullwidth">
+                                <i class="fas fa-lightbulb mr-2"></i>
+                                Gerenciar Sugestões
+                            </a>
+                            {% endif %}
                             <a href="{{ url_for('main.editar_lista', token=lista.token_admin) }}" class="button is-warning is-fullwidth">
                                 <i class="fas fa-edit mr-2"></i>
                                 Editar Lista

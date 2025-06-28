@@ -143,6 +143,7 @@
                                             <th>Item</th>
                                             <th>Quantidade</th>
                                             <th>Progresso</th>
+                                            <th>Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -158,26 +159,44 @@
                                                 {{ item.quantidade_necessaria }} {{ item.unidade_medida }}
                                             </td>
                                             <td>
-                                                <div class="level">
+                                                <div class="level is-mobile">
                                                     <div class="level-left">
                                                         <div class="level-item">
-                                                            <div>
-                                                                <p class="heading">Arrecadado</p>
-                                                                <p class="title is-6">{{ item.quantidade_arrecadada }}</p>
-                                                            </div>
+                                                            <progress class="progress {{ 'is-success' if item.esta_completo else 'is-warning' if item.percentual_conclusao >= 75 else 'is-info' if item.percentual_conclusao >= 50 else 'is-danger' }}" 
+                                                                      value="{{ item.percentual_conclusao }}" max="100" style="width: 60px; height: 8px;">
+                                                            </progress>
                                                         </div>
                                                     </div>
                                                     <div class="level-right">
                                                         <div class="level-item">
-                                                            <div>
-                                                                <p class="heading">Restante</p>
-                                                                <p class="title is-6">{{ item.quantidade_restante }}</p>
-                                                            </div>
+                                                            <small class="has-text-grey">{{ "%.0f"|format(item.percentual_conclusao) }}%</small>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <progress class="progress is-primary" value="{{ item.percentual_conclusao }}" max="100"></progress>
-                                                <small class="has-text-grey">{{ "%.1f"|format(item.percentual_conclusao) }}%</small>
+                                                <small class="has-text-grey">
+                                                    {{ item.quantidade_arrecadada }} / {{ item.quantidade_necessaria }} {{ item.unidade_medida }}
+                                                </small>
+                                            </td>
+                                            <td>
+                                                <div class="buttons are-small">
+                                                    {% if not item.doacoes %}
+                                                        <a href="{{ url_for('main.editar_item', token=lista.token_admin, item_id=item.id) }}" 
+                                                           class="button is-warning" title="Editar item">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <form method="POST" action="{{ url_for('main.excluir_item', token=lista.token_admin, item_id=item.id) }}" 
+                                                              style="display: inline;" onsubmit="return confirm('Tem certeza que deseja excluir este item?')">
+                                                            <button type="submit" class="button is-danger" title="Excluir item">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    {% else %}
+                                                        <span class="tag is-info is-light" title="Item com doações - não pode ser editado">
+                                                            <i class="fas fa-lock mr-1"></i>
+                                                            Com doações
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
                                             </td>
                                         </tr>
                                         {% endfor %}

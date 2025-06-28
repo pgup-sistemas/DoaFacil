@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Usuário - DoaFácil{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="columns is-centered">
+            <div class="column is-6">
+                <div class="box">
+                    <h1 class="title has-text-centered">
+                        <i class="fas fa-user-edit mr-2"></i>
+                        Editar Usuário
+                    </h1>
+
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="field">
+                            <label class="label">{{ form.nome.label }}</label>
+                            <div class="control">
+                                {{ form.nome(class="input") }}
+                            </div>
+                            {% if form.nome.errors %}
+                                <p class="help is-danger">
+                                    {% for error in form.nome.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <div class="field">
+                            <label class="label">{{ form.username.label }}</label>
+                            <div class="control">
+                                {{ form.username(class="input") }}
+                            </div>
+                            {% if form.username.errors %}
+                                <p class="help is-danger">
+                                    {% for error in form.username.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <div class="field">
+                            <label class="label">{{ form.email.label }}</label>
+                            <div class="control">
+                                {{ form.email(class="input", type="email") }}
+                            </div>
+                            {% if form.email.errors %}
+                                <p class="help is-danger">
+                                    {% for error in form.email.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <div class="field">
+                            <label class="label">{{ form.role.label }}</label>
+                            <div class="control">
+                                <div class="select is-fullwidth">
+                                    {{ form.role() }}
+                                </div>
+                            </div>
+                            {% if form.role.errors %}
+                                <p class="help is-danger">
+                                    {% for error in form.role.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <div class="field">
+                            <label class="label">{{ form.ativo.label }}</label>
+                            <div class="control">
+                                <label class="checkbox">
+                                    {{ form.ativo() }}
+                                    Usuário ativo
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label">{{ form.password.label }}</label>
+                            <div class="control">
+                                {{ form.password(class="input", type="password") }}
+                            </div>
+                            {% if form.password.errors %}
+                                <p class="help is-danger">
+                                    {% for error in form.password.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </p>
+                            {% endif %}
+                            <p class="help">Deixe em branco para manter a senha atual</p>
+                        </div>
+
+                        <div class="field">
+                            <label class="label">{{ form.confirm_password.label }}</label>
+                            <div class="control">
+                                {{ form.confirm_password(class="input", type="password") }}
+                            </div>
+                            {% if form.confirm_password.errors %}
+                                <p class="help is-danger">
+                                    {% for error in form.confirm_password.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <div class="field">
+                            <div class="control">
+                                <button type="submit" class="button is-primary is-fullwidth">
+                                    <i class="fas fa-save mr-1"></i>
+                                    Salvar Alterações
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="has-text-centered mt-4">
+                        <a href="{{ url_for('main.gerenciar_usuarios') }}" class="button is-light">
+                            <i class="fas fa-arrow-left mr-1"></i>
+                            Voltar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 

@@ -1,0 +1,1149 @@
+{% extends "base.html" %}
+
+{% block title %}Doar - {{ lista.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.notification {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#qrcode-container canvas {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+}
+
+.spinner-border {
+    display: inline-block;
+    width: 2rem;
+    height: 2rem;
+    vertical-align: text-bottom;
+    border: 0.25em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinner-border .75s linear infinite;
+}
+
+@keyframes spinner-border {
+    to { transform: rotate(360deg); }
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Estilo para o select com placeholder */
+select option[value=""] {
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Melhorar aparência do select quando não há seleção */
+select:invalid {
+    color: #6c757d;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="columns is-centered">
+            <div class="column is-8">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-header-title">
+                            <h1 class="title is-3">
+                                <i class="fas fa-heart mr-2"></i>
+                                Doação para: {{ lista.nome }}
+                            </h1>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <!-- Informações do item (apenas para doação física) -->
+                        <div id="info-item" class="notification is-info is-light mb-4">
+                            <div class="media">
+                                <div class="media-left">
+                                    <span class="icon is-large">
+                                        <i class="fas fa-box fa-2x"></i>
+                                    </span>
+                                </div>
+                                <div class="media-content">
+                                    <h4 class="title is-4">{{ item.nome }}</h4>
+                                    <p class="subtitle is-6">{{ item.descricao }}</p>
+                                    <p>
+                                        <strong>Necessário:</strong> {{ item.quantidade_necessaria }} {{ item.unidade_medida }}<br>
+                                        <strong>Arrecadado:</strong> {{ item.quantidade_arrecadada }} {{ item.unidade_medida }}<br>
+                                        <strong>Restante:</strong> {{ item.quantidade_restante }} {{ item.unidade_medida }}
+                                        {% if item.valor_financeiro_arrecadado > 0 %}
+                                            <br><strong>PIX:</strong> <span class="has-text-success">R$ {{ "%.2f"|format(item.valor_financeiro_arrecadado) }}</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <form method="POST" id="doacao-form">
+                            {{ form.hidden_tag() }}
+                            <!-- Campo oculto para o item_id -->
+                            <input type="hidden" name="item_id" value="{{ item.id }}">
+                            
+                            <!-- Seção de Identificação -->
+                            <div class="field">
+                                <label class="label" for="{{ form.identificador.id }}">
+                                    <i class="fas fa-id-card mr-2"></i>
+                                    {{ form.identificador.label }}
+                                </label>
+                                <div class="control has-icons-left">
+                                    {{ form.identificador(class="input", placeholder="Digite seu CPF, e-mail ou telefone", id=form.identificador.id) }}
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                </div>
+                                {% if form.identificador.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.identificador.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                                <p class="help">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Informe seu CPF, e-mail ou telefone para identificação rápida.
+                                </p>
+                            </div>
+
+                            <!-- Seção de Dados Pessoais (inicialmente oculta) -->
+                            <div id="dados-pessoais" style="display: none;">
+                                <div class="notification is-warning is-light mb-4">
+                                    <i class="fas fa-user-plus mr-2"></i>
+                                    <strong>Primeira doação?</strong> Preencha seus dados pessoais para facilitar futuras doações.
+                                </div>
+                                
+                                <div class="field">
+                                    <label class="label" for="{{ form.doador_nome.id }}">{{ form.doador_nome.label }}</label>
+                                    <div class="control has-icons-left">
+                                        {{ form.doador_nome(class="input", placeholder="Seu nome", id=form.doador_nome.id) }}
+                                        <span class="icon is-small is-left">
+                                            <i class="fas fa-user"></i>
+                                        </span>
+                                    </div>
+                                    {% if form.doador_nome.errors %}
+                                        <p class="help is-danger">
+                                            {% for error in form.doador_nome.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="field">
+                                    <label class="label" for="{{ form.cpf.id }}">{{ form.cpf.label }}</label>
+                                    <div class="control has-icons-left">
+                                        {{ form.cpf(class="input", placeholder="CPF (apenas números)", id=form.cpf.id) }}
+                                        <span class="icon is-small is-left">
+                                            <i class="fas fa-id-card"></i>
+                                        </span>
+                                    </div>
+                                    {% if form.cpf.errors %}
+                                        <p class="help is-danger">
+                                            {% for error in form.cpf.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="field">
+                                    <label class="label" for="{{ form.cep.id }}">{{ form.cep.label }}</label>
+                                    <div class="control has-icons-left">
+                                        {{ form.cep(class="input", placeholder="CEP", id=form.cep.id) }}
+                                        <span class="icon is-small is-left">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                        </span>
+                                    </div>
+                                    {% if form.cep.errors %}
+                                        <p class="help is-danger">
+                                            {% for error in form.cep.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </p>
+                                    {% endif %}
+                                    <p class="help">
+                                        <i class="fas fa-search mr-1"></i>
+                                        Digite o CEP para preenchimento automático do endereço.
+                                    </p>
+                                </div>
+                                
+                                <!-- Campos de Endereço (preenchidos automaticamente) -->
+                                <div class="columns">
+                                    <div class="column is-8">
+                                        <div class="field">
+                                            <label class="label" for="{{ form.logradouro.id }}">{{ form.logradouro.label }}</label>
+                                            <div class="control has-icons-left">
+                                                {{ form.logradouro(class="input", placeholder="Rua, Avenida, etc.", id=form.logradouro.id, readonly=true) }}
+                                                <span class="icon is-small is-left">
+                                                    <i class="fas fa-road"></i>
+                                                </span>
+                                            </div>
+                                            {% if form.logradouro.errors %}
+                                                <p class="help is-danger">
+                                                    {% for error in form.logradouro.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="column is-4">
+                                        <div class="field">
+                                            <label class="label" for="{{ form.numero.id }}">{{ form.numero.label }}</label>
+                                            <div class="control has-icons-left">
+                                                {{ form.numero(class="input", placeholder="Nº", id=form.numero.id) }}
+                                                <span class="icon is-small is-left">
+                                                    <i class="fas fa-home"></i>
+                                                </span>
+                                            </div>
+                                            {% if form.numero.errors %}
+                                                <p class="help is-danger">
+                                                    {% for error in form.numero.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="field">
+                                    <label class="label" for="{{ form.complemento.id }}">{{ form.complemento.label }}</label>
+                                    <div class="control has-icons-left">
+                                        {{ form.complemento(class="input", placeholder="Apartamento, bloco, etc.", id=form.complemento.id) }}
+                                        <span class="icon is-small is-left">
+                                            <i class="fas fa-building"></i>
+                                        </span>
+                                    </div>
+                                    {% if form.complemento.errors %}
+                                        <p class="help is-danger">
+                                            {% for error in form.complemento.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="columns">
+                                    <div class="column is-6">
+                                        <div class="field">
+                                            <label class="label" for="{{ form.bairro.id }}">{{ form.bairro.label }}</label>
+                                            <div class="control has-icons-left">
+                                                {{ form.bairro(class="input", placeholder="Bairro", id=form.bairro.id, readonly=true) }}
+                                                <span class="icon is-small is-left">
+                                                    <i class="fas fa-map"></i>
+                                                </span>
+                                            </div>
+                                            {% if form.bairro.errors %}
+                                                <p class="help is-danger">
+                                                    {% for error in form.bairro.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="column is-4">
+                                        <div class="field">
+                                            <label class="label" for="{{ form.cidade.id }}">{{ form.cidade.label }}</label>
+                                            <div class="control has-icons-left">
+                                                {{ form.cidade(class="input", placeholder="Cidade", id=form.cidade.id, readonly=true) }}
+                                                <span class="icon is-small is-left">
+                                                    <i class="fas fa-city"></i>
+                                                </span>
+                                            </div>
+                                            {% if form.cidade.errors %}
+                                                <p class="help is-danger">
+                                                    {% for error in form.cidade.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="column is-2">
+                                        <div class="field">
+                                            <label class="label" for="{{ form.estado.id }}">{{ form.estado.label }}</label>
+                                            <div class="control has-icons-left">
+                                                {{ form.estado(class="input", placeholder="UF", id=form.estado.id, readonly=true) }}
+                                                <span class="icon is-small is-left">
+                                                    <i class="fas fa-flag"></i>
+                                                </span>
+                                            </div>
+                                            {% if form.estado.errors %}
+                                                <p class="help is-danger">
+                                                    {% for error in form.estado.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="field">
+                                    <label class="label" for="{{ form.contato.id }}">{{ form.contato.label }}</label>
+                                    <div class="control has-icons-left">
+                                        {{ form.contato(class="input", placeholder="Telefone ou e-mail para contato", id=form.contato.id) }}
+                                        <span class="icon is-small is-left">
+                                            <i class="fas fa-envelope"></i>
+                                        </span>
+                                    </div>
+                                    {% if form.contato.errors %}
+                                        <p class="help is-danger">
+                                            {% for error in form.contato.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Seção de Dados do Doador Encontrado (inicialmente oculta) -->
+                            <div id="doador-encontrado" style="display: none;">
+                                <div class="notification is-success is-light mb-4">
+                                    <i class="fas fa-user-check mr-2"></i>
+                                    <strong>Doador encontrado!</strong> Olá, <span id="nome-doador"></span>! Seus dados foram carregados automaticamente.
+                                </div>
+                                
+                                <!-- Campos ocultos para dados do doador encontrado -->
+                                <input type="hidden" name="doador_nome" id="hidden-doador-nome">
+                                <input type="hidden" name="cpf" id="hidden-cpf">
+                                <input type="hidden" name="cep" id="hidden-cep">
+                                <input type="hidden" name="contato" id="hidden-contato">
+                            </div>
+
+                            <!-- Seção de Tipo de Doação -->
+                            <div class="field">
+                                <label class="label" for="{{ form.tipo_doacao.id }}">{{ form.tipo_doacao.label }}</label>
+                                <div class="control has-icons-left">
+                                    <div class="select is-fullwidth">
+                                        {{ form.tipo_doacao(id=form.tipo_doacao.id) }}
+                                    </div>
+                                </div>
+                                {% if form.tipo_doacao.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.tipo_doacao.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                            </div>
+
+                            <!-- Seção de Doação Física (aparece quando "Item Físico" é selecionado) -->
+                            <div id="secao-item-fisico" style="display: none;">
+                                <div class="notification is-info is-light mb-4">
+                                    <i class="fas fa-box mr-2"></i>
+                                    <strong>Doação de Item Físico</strong> - Você doará a quantidade especificada do item.
+                                </div>
+                                
+                                <div class="field">
+                                    <label class="label" for="{{ form.quantidade.id }}">{{ form.quantidade.label }}</label>
+                                    <div class="control has-icons-left">
+                                        {{ form.quantidade(class="input", type="number", min="1", max=item.quantidade_restante, id=form.quantidade.id) }}
+                                        <span class="icon is-small is-left">
+                                            <i class="fas fa-calculator"></i>
+                                        </span>
+                                    </div>
+                                    {% if form.quantidade.errors %}
+                                        <p class="help is-danger">
+                                            {% for error in form.quantidade.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </p>
+                                    {% endif %}
+                                    <p class="help">
+                                        <i class="fas fa-chart-line mr-1"></i>
+                                        Máximo disponível: <span class="has-text-weight-bold has-text-primary">{{ item.quantidade_restante }} {{ item.unidade_medida }}</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Seção de Doação Financeira (aparece quando "Doação Financeira" é selecionado) -->
+                            <div id="secao-dinheiro" style="display: none;">
+                                <div class="notification is-warning is-light mb-4">
+                                    <i class="fas fa-money-bill-wave mr-2"></i>
+                                    <strong>Doação Financeira</strong> - Sua doação será usada para comprar itens necessários.
+                                </div>
+                                
+                                <div class="field">
+                                    <label class="label" for="{{ form.valor_dinheiro.id }}">{{ form.valor_dinheiro.label }}</label>
+                                    <div class="control has-icons-left">
+                                        {{ form.valor_dinheiro(class="input", type="number", step="0.01", min="0.01", placeholder="0.00", id=form.valor_dinheiro.id) }}
+                                        <span class="icon is-small is-left">
+                                            <i class="fas fa-dollar-sign"></i>
+                                        </span>
+                                    </div>
+                                    {% if form.valor_dinheiro.errors %}
+                                        <p class="help is-danger">
+                                            {% for error in form.valor_dinheiro.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </p>
+                                    {% endif %}
+                                    <p class="help">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Informe o valor que deseja doar em reais. O QR Code PIX será gerado automaticamente.
+                                    </p>
+                                </div>
+
+                                <!-- Seção PIX (aparece quando há PIX configurado) -->
+                                {% if lista.aceita_pix and lista.chave_pix %}
+                                    <div id="secao-pix" style="display: none;">
+                                        <div class="notification is-success is-light mb-4">
+                                            <div class="media">
+                                                <div class="media-left">
+                                                    <span class="icon is-large">
+                                                        <i class="fas fa-qrcode fa-2x"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="media-content">
+                                                    <h4 class="title is-4">Pagamento via PIX</h4>
+                                                    <p class="subtitle is-6">Escaneie o QR Code ou copie o link para pagar</p>
+                                                    <p>
+                                                        <strong>Chave PIX:</strong> {{ lista.chave_pix }}<br>
+                                                        <strong>Valor:</strong> R$ <span id="valor-pix">0,00</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="columns is-centered">
+                                            <div class="column is-6">
+                                                <div class="card">
+                                                    <div class="card-content has-text-centered">
+                                                        <h5 class="title is-5 mb-3">
+                                                            <i class="fas fa-qrcode mr-2"></i>
+                                                            QR Code PIX
+                                                        </h5>
+                                                        <div id="qrcode-container" class="mb-3">
+                                                            <!-- QR Code será gerado aqui -->
+                                                        </div>
+                                                        <button type="button" class="button is-primary is-small" onclick="copiarLinkPix()">
+                                                            <i class="fas fa-copy mr-2"></i>
+                                                            Copiar Link PIX
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="notification is-danger is-light">
+                                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                                        <strong>PIX não disponível:</strong> Esta lista não possui PIX configurado. A doação será registrada como financeira.
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="field">
+                                <label class="label" for="{{ form.observacao.id }}">{{ form.observacao.label }}</label>
+                                <div class="control">
+                                    {{ form.observacao(class="textarea", placeholder="Observação opcional...", id=form.observacao.id) }}
+                                </div>
+                                {% if form.observacao.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.observacao.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="field is-grouped is-grouped-centered mt-5">
+                                <div class="control">
+                                    <button type="submit" class="button is-primary is-rounded is-medium">
+                                        <i class="fas fa-heart mr-2"></i>
+                                        Confirmar Doação
+                                    </button>
+                                </div>
+                                <div class="control">
+                                    <a href="{{ url_for('main.visualizar_lista', slug=lista.slug) }}" class="button is-light is-rounded is-medium">
+                                        Cancelar
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                        
+                        <div class="notification is-warning is-light mt-5">
+                            <i class="fas fa-user-shield mr-2"></i>
+                            <strong>Privacidade:</strong> Seus dados serão usados apenas para contato e controle interno, conforme nossa política de privacidade e a LGPD.
+                        </div>
+
+                        <div class="notification is-info is-light mt-4">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            <strong>Instruções:</strong>
+                            <ul class="mt-2">
+                                <li>Escaneie o QR Code com seu app bancário</li>
+                                <li>Ou copie o link PIX e cole no seu app</li>
+                                <li>Confirme o pagamento no seu banco</li>
+                                <li>Clique em "Confirmar Doação" após o pagamento</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const identificadorInput = document.getElementById('{{ form.identificador.id }}');
+    const dadosPessoaisDiv = document.getElementById('dados-pessoais');
+    const doadorEncontradoDiv = document.getElementById('doador-encontrado');
+    const nomeDoadorSpan = document.getElementById('nome-doador');
+    const tipoDoacaoSelect = document.getElementById('{{ form.tipo_doacao.id }}');
+    const secaoItemFisicoDiv = document.getElementById('secao-item-fisico');
+    const secaoDinheiroDiv = document.getElementById('secao-dinheiro');
+    const secaoPixDiv = document.getElementById('secao-pix');
+    const infoItemDiv = document.getElementById('info-item');
+    const quantidadeInput = document.getElementById('{{ form.quantidade.id }}');
+    const valorDinheiroInput = document.getElementById('{{ form.valor_dinheiro.id }}');
+    const valorPixSpan = document.getElementById('valor-pix');
+    
+    // Campos ocultos para doador encontrado
+    const hiddenDoadorNome = document.getElementById('hidden-doador-nome');
+    const hiddenCpf = document.getElementById('hidden-cpf');
+    const hiddenCep = document.getElementById('hidden-cep');
+    const hiddenContato = document.getElementById('hidden-contato');
+    
+    let timeoutId;
+    let qrCodeGerado = false;
+    let gerandoQRCode = false; // Flag para evitar múltiplas chamadas simultâneas
+    let qrCodeTimeoutId; // Timeout para debounce do QR Code
+    
+    // Inicialização: ocultar todas as seções de doação no carregamento da página
+    secaoItemFisicoDiv.style.display = 'none';
+    secaoDinheiroDiv.style.display = 'none';
+    if (secaoPixDiv) {
+        secaoPixDiv.style.display = 'none';
+    }
+    
+    // Controle das seções baseado no tipo de doação
+    tipoDoacaoSelect.addEventListener('change', function() {
+        const tipo = this.value;
+        
+        if (tipo === 'item') {
+            // Doação física
+            secaoItemFisicoDiv.style.display = 'block';
+            secaoDinheiroDiv.style.display = 'none';
+            infoItemDiv.style.display = 'block';
+            
+            // Limpar campos de dinheiro
+            valorDinheiroInput.value = '';
+            
+        } else if (tipo === 'dinheiro') {
+            // Doação financeira
+            secaoItemFisicoDiv.style.display = 'none';
+            secaoDinheiroDiv.style.display = 'block';
+            infoItemDiv.style.display = 'none';
+            
+            // Limpar campos de item
+            quantidadeInput.value = '';
+            
+            // Mostrar PIX se disponível
+            if (secaoPixDiv) {
+                secaoPixDiv.style.display = 'block';
+                
+                // Gerar QR Code automaticamente se já há valor
+                const valor = valorDinheiroInput.value;
+                if (valor && parseFloat(valor) > 0) {
+                    setTimeout(() => {
+                        gerarQRCode();
+                    }, 500); // Pequeno delay para garantir que a seção está visível
+                }
+            }
+        }
+    });
+    
+    // Atualizar valor PIX quando valor mudar
+    valorDinheiroInput.addEventListener('input', function() {
+        if (tipoDoacaoSelect.value === 'dinheiro' && secaoPixDiv) {
+            atualizarValorPix();
+            
+            // Debounce para gerar QR Code automaticamente
+            clearTimeout(qrCodeTimeoutId);
+            qrCodeTimeoutId = setTimeout(() => {
+                const valor = this.value;
+                if (valor && parseFloat(valor) > 0) {
+                    gerarQRCode();
+                }
+            }, 1000); // Aguardar 1 segundo após parar de digitar
+        }
+    });
+    
+    identificadorInput.addEventListener('input', function() {
+        clearTimeout(timeoutId);
+        const identificador = this.value.trim();
+        
+        // Esconder ambas as seções inicialmente
+        dadosPessoaisDiv.style.display = 'none';
+        doadorEncontradoDiv.style.display = 'none';
+        
+        // Se o campo estiver vazio, não fazer nada
+        if (identificador.length < 3) {
+            return;
+        }
+        
+        // Aguardar 500ms após o usuário parar de digitar
+        timeoutId = setTimeout(function() {
+            buscarDoador(identificador);
+        }, 500);
+    });
+    
+    function buscarDoador(identificador) {
+        fetch(`/api/buscar-doador/${encodeURIComponent(identificador)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.encontrado) {
+                    // Doador encontrado - mostrar seção de doador encontrado
+                    dadosPessoaisDiv.style.display = 'none';
+                    doadorEncontradoDiv.style.display = 'block';
+                    
+                    // Preencher dados do doador
+                    nomeDoadorSpan.textContent = data.doador.nome;
+                    hiddenDoadorNome.value = data.doador.nome;
+                    hiddenCpf.value = data.doador.cpf || '';
+                    hiddenCep.value = data.doador.cep || '';
+                    hiddenContato.value = data.doador.contato || '';
+                    
+                    // Adicionar classe de sucesso ao input
+                    identificadorInput.classList.add('is-success');
+                    identificadorInput.classList.remove('is-danger');
+                    
+                } else {
+                    // Doador não encontrado - mostrar formulário completo
+                    dadosPessoaisDiv.style.display = 'block';
+                    doadorEncontradoDiv.style.display = 'none';
+                    
+                    // Limpar campos ocultos
+                    hiddenDoadorNome.value = '';
+                    hiddenCpf.value = '';
+                    hiddenCep.value = '';
+                    hiddenContato.value = '';
+                    
+                    // Adicionar classe de aviso ao input
+                    identificadorInput.classList.add('is-danger');
+                    identificadorInput.classList.remove('is-success');
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao buscar doador:', error);
+                // Em caso de erro, mostrar formulário completo
+                dadosPessoaisDiv.style.display = 'block';
+                doadorEncontradoDiv.style.display = 'none';
+            });
+    }
+    
+    function gerarQRCode() {
+        const valor = valorDinheiroInput.value || '0.01';
+        const chavePix = '{{ lista.chave_pix }}';
+        
+        // Verificar se o valor mudou significativamente
+        const valorAnterior = window.valorQRCodeAnterior || '0';
+        if (Math.abs(parseFloat(valor) - parseFloat(valorAnterior)) < 0.01) {
+            return;
+        }
+        
+        // Validar se temos dados mínimos
+        if (!chavePix || chavePix.trim() === '') {
+            mostrarErroQRCode('Chave PIX não configurada');
+            return;
+        }
+        
+        if (!valor || parseFloat(valor) <= 0) {
+            mostrarErroQRCode('Valor inválido');
+            return;
+        }
+        
+        gerandoQRCode = true;
+        
+        // Armazenar valor atual para comparação futura
+        window.valorQRCodeAnterior = valor;
+        
+        // Gerar QR Code via backend
+        gerarQRCodeReal(valor, chavePix);
+    }
+    
+    function gerarQRCodeReal(valor, chavePix) {
+        // Gerar link PIX para copiar
+        const linkPix = `pix://${chavePix}?amount=${valor}`;
+        
+        // Gerar QR Code real
+        const qrContainer = document.getElementById('qrcode-container');
+        
+        if (!qrContainer) {
+            mostrarErroQRCode('Erro: Container não encontrado');
+            return;
+        }
+        
+        // Limpar container
+        qrContainer.innerHTML = '';
+        
+        // Mostrar loading
+        qrContainer.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Gerando QR Code...</span>
+                </div>
+                <p class="mt-2">Gerando QR Code PIX...</p>
+            </div>
+        `;
+        
+        // Chamar API do backend
+        fetch('/api/gerar-qrcode-pix', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                chave_pix: chavePix,
+                valor: valor
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Exibir QR Code
+                qrContainer.innerHTML = `
+                    <div style="text-align: center;">
+                        <img src="${data.qrcode_base64}" alt="QR Code PIX" style="max-width: 200px; border: 1px solid #ddd; border-radius: 4px;">
+                        <div style="margin-top: 10px; font-size: 12px; color: #495057;">
+                            <div><strong>Valor:</strong> R$ ${valor}</div>
+                            <div style="font-size: 10px; color: #6c757d; word-break: break-all; margin-top: 5px;">
+                                <strong>Chave:</strong> ${chavePix}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Armazenar link PIX para copiar
+                window.linkPixParaCopiar = data.link_pix;
+                qrCodeGerado = true;
+                atualizarValorPix();
+                gerandoQRCode = false; // Resetar flag
+                
+            } else {
+                console.error('Erro na API:', data.erro);
+                gerarQRCodeSimples(valor, chavePix, linkPix);
+                gerandoQRCode = false; // Resetar flag
+            }
+        })
+        .catch(error => {
+            console.error('Erro na requisição:', error);
+            gerarQRCodeSimples(valor, chavePix, linkPix);
+            gerandoQRCode = false; // Resetar flag
+        });
+    }
+    
+    function gerarQRCodeSimples(valor, chavePix, linkPix) {
+        // Criar QR Code visual simples mas funcional
+        qrContainer.innerHTML = `
+            <div style="background: #ffffff; padding: 20px; border-radius: 8px; border: 2px solid #007bff; display: inline-block; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                <div style="font-size: 16px; color: #007bff; margin-bottom: 15px; font-weight: bold;">
+                    <i class="fas fa-qrcode mr-2"></i>
+                    QR Code PIX
+                </div>
+                <div style="width: 160px; height: 160px; background: #f8f9fa; border: 2px solid #007bff; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; position: relative;">
+                    <!-- Padrão QR Code simulado -->
+                    <div style="position: absolute; top: 10px; left: 10px; width: 20px; height: 20px; background: #000; border-radius: 2px;"></div>
+                    <div style="position: absolute; top: 10px; right: 10px; width: 20px; height: 20px; background: #000; border-radius: 2px;"></div>
+                    <div style="position: absolute; bottom: 10px; left: 10px; width: 20px; height: 20px; background: #000; border-radius: 2px;"></div>
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; background: #000; border-radius: 1px;"></div>
+                    <div style="position: absolute; top: 60%; left: 30%; width: 4px; height: 4px; background: #000; border-radius: 1px;"></div>
+                    <div style="position: absolute; top: 40%; right: 30%; width: 4px; height: 4px; background: #000; border-radius: 1px;"></div>
+                    <div style="position: absolute; bottom: 30%; left: 40%; width: 4px; height: 4px; background: #000; border-radius: 1px;"></div>
+                    <div style="position: absolute; bottom: 40%; right: 40%; width: 4px; height: 4px; background: #000; border-radius: 1px;"></div>
+                </div>
+                <div style="font-size: 14px; color: #495057; margin-bottom: 10px;">
+                    <strong>Valor:</strong> R$ ${valor}<br>
+                    <strong>Chave:</strong> ${chavePix}
+                </div>
+                <div style="font-size: 12px; color: #6c757d; background: #f8f9fa; padding: 8px; border-radius: 4px; margin-top: 10px;">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Use o botão "Copiar Link PIX" para pagar
+                </div>
+            </div>
+        `;
+    }
+    
+    function mostrarQRCodeFallback(valor, chavePix, linkPix) {
+        qrContainer.innerHTML = `
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 2px solid #dee2e6; display: inline-block; text-align: center;">
+                <div style="font-size: 14px; color: #495057; margin-bottom: 15px; font-weight: bold;">
+                    <i class="fas fa-qrcode mr-2"></i>
+                    QR Code PIX
+                </div>
+                <div style="width: 180px; height: 180px; background: #fff; border: 2px solid #6c757d; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                    <div style="text-align: center;">
+                        <i class="fas fa-qrcode" style="font-size: 60px; color: #6c757d; margin-bottom: 10px;"></i>
+                        <div style="font-size: 12px; color: #6c757d;">
+                            QR Code<br>Indisponível
+                        </div>
+                    </div>
+                </div>
+                <div style="font-size: 12px; color: #495057; margin-bottom: 10px;">
+                    <strong>Valor:</strong> R$ ${valor}<br>
+                    <strong>Chave:</strong> ${chavePix}
+                </div>
+                <div style="font-size: 11px; color: #6c757d;">
+                    Use o botão "Copiar Link PIX" abaixo
+                </div>
+            </div>
+        `;
+        
+        // Armazenar link PIX para copiar
+        window.linkPixParaCopiar = linkPix;
+        qrCodeGerado = true;
+    }
+    
+    function mostrarErroQRCode(mensagem) {
+        qrContainer.innerHTML = `
+            <div style="background: #f8d7da; padding: 20px; border-radius: 8px; border: 2px solid #f5c6cb; display: inline-block; text-align: center;">
+                <div style="font-size: 14px; color: #721c24; margin-bottom: 15px; font-weight: bold;">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    Erro no QR Code
+                </div>
+                <div style="width: 180px; height: 180px; background: #fff; border: 2px solid #f5c6cb; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                    <div style="text-align: center;">
+                        <i class="fas fa-times-circle" style="font-size: 60px; color: #dc3545; margin-bottom: 10px;"></i>
+                        <div style="font-size: 12px; color: #721c24;">
+                            ${mensagem}
+                        </div>
+                    </div>
+                </div>
+                <div style="font-size: 11px; color: #721c24;">
+                    Entre em contato com o administrador
+                </div>
+            </div>
+        `;
+    }
+    
+    function atualizarValorPix() {
+        const valor = valorDinheiroInput.value || '0.00';
+        valorPixSpan.textContent = valor;
+        
+        // Atualizar QR Code se já foi gerado
+        if (qrCodeGerado) {
+            gerarQRCode();
+        }
+    }
+    
+    // Função global para copiar link PIX
+    window.copiarLinkPix = function() {
+        if (!window.linkPixParaCopiar) {
+            alert('Link PIX não disponível. Tente novamente.');
+            return;
+        }
+        
+        const button = event.target.closest('button');
+        const originalText = button.innerHTML;
+        
+        // Tentar usar Clipboard API moderna
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(window.linkPixParaCopiar)
+                .then(function() {
+                    mostrarSucessoCopiar(button, originalText);
+                })
+                .catch(function(err) {
+                    // Fallback para método antigo
+                    copiarViaFallback();
+                });
+        } else {
+            copiarViaFallback();
+        }
+        
+        function copiarViaFallback() {
+            // Criar elemento temporário
+            const textArea = document.createElement('textarea');
+            textArea.value = window.linkPixParaCopiar;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            
+            // Selecionar e copiar
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                
+                if (successful) {
+                    mostrarSucessoCopiar(button, originalText);
+                } else {
+                    mostrarErroCopiar();
+                }
+            } catch (err) {
+                mostrarErroCopiar();
+            }
+            
+            // Limpar
+            document.body.removeChild(textArea);
+        }
+        
+        function mostrarSucessoCopiar(button, originalText) {
+            button.innerHTML = '<i class="fas fa-check mr-2"></i>Copiado!';
+            button.classList.remove('is-primary');
+            button.classList.add('is-success');
+            
+            // Mostrar notificação adicional
+            mostrarNotificacao('Link PIX copiado!', 'success');
+            
+            setTimeout(function() {
+                button.innerHTML = originalText;
+                button.classList.remove('is-success');
+                button.classList.add('is-primary');
+            }, 3000);
+        }
+        
+        function mostrarErroCopiar() {
+            mostrarNotificacao('Erro ao copiar. Tente selecionar e copiar manualmente.', 'error');
+        }
+    };
+    
+    function mostrarNotificacao(mensagem, tipo) {
+        // Criar notificação
+        const notificacao = document.createElement('div');
+        notificacao.className = `notification is-${tipo === 'success' ? 'success' : 'danger'} is-light`;
+        notificacao.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 300px;
+            animation: slideIn 0.3s ease-out;
+        `;
+        
+        notificacao.innerHTML = `
+            <button class="delete" onclick="this.parentElement.remove()"></button>
+            <i class="fas fa-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'} mr-2"></i>
+            ${mensagem}
+        `;
+        
+        document.body.appendChild(notificacao);
+        
+        // Remover automaticamente após 3 segundos (consistente com flash messages)
+        setTimeout(() => {
+            if (notificacao.parentElement) {
+                notificacao.style.transition = 'opacity 0.3s ease-out';
+                notificacao.style.opacity = '0';
+                setTimeout(() => {
+                    if (notificacao.parentElement) {
+                        notificacao.remove();
+                    }
+                }, 300);
+            }
+        }, 3000);
+    }
+    
+    // ===== FUNÇÕES PARA CONSULTA DE CEP =====
+    
+    // Elementos do formulário de endereço
+    const cepInput = document.getElementById('{{ form.cep.id }}');
+    const logradouroInput = document.getElementById('{{ form.logradouro.id }}');
+    const bairroInput = document.getElementById('{{ form.bairro.id }}');
+    const cidadeInput = document.getElementById('{{ form.cidade.id }}');
+    const estadoInput = document.getElementById('{{ form.estado.id }}');
+    
+    // Variáveis para controle da consulta
+    let consultaCepTimeout;
+    let consultandoCep = false;
+    
+    // Função para consultar CEP
+    async function consultarCep(cep) {
+        if (!cep || cep.length < 8) {
+            return null;
+        }
+        
+        try {
+            // Limpar CEP (remover caracteres especiais)
+            const cepLimpo = cep.replace(/\D/g, '');
+            
+            if (cepLimpo.length !== 8) {
+                return null;
+            }
+            
+            // Mostrar loading
+            mostrarLoadingCep();
+            
+            // Fazer requisição para nossa API
+            const response = await fetch(`/api/consultar-cep/${cepLimpo}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                return data.endereco;
+            } else {
+                throw new Error(data.error || 'CEP não encontrado');
+            }
+            
+        } catch (error) {
+            console.error('Erro ao consultar CEP:', error);
+            throw error;
+        } finally {
+            // Remover loading
+            removerLoadingCep();
+        }
+    }
+    
+    // Função para preencher campos de endereço
+    function preencherEndereco(endereco) {
+        if (!endereco) return;
+        
+        // Preencher campos
+        if (logradouroInput) logradouroInput.value = endereco.logradouro || '';
+        if (bairroInput) bairroInput.value = endereco.bairro || '';
+        if (cidadeInput) cidadeInput.value = endereco.cidade || '';
+        if (estadoInput) estadoInput.value = endereco.estado || '';
+        
+        // Formatar CEP
+        if (cepInput && endereco.cep) {
+            cepInput.value = endereco.cep;
+        }
+        
+        // Mostrar notificação de sucesso
+        mostrarNotificacao('Endereço preenchido automaticamente!', 'success');
+        
+        // Focar no campo número
+        const numeroInput = document.getElementById('{{ form.numero.id }}');
+        if (numeroInput) {
+            numeroInput.focus();
+        }
+    }
+    
+    // Função para limpar campos de endereço
+    function limparEndereco() {
+        if (logradouroInput) logradouroInput.value = '';
+        if (bairroInput) bairroInput.value = '';
+        if (cidadeInput) cidadeInput.value = '';
+        if (estadoInput) estadoInput.value = '';
+    }
+    
+    // Função para mostrar loading no campo CEP
+    function mostrarLoadingCep() {
+        if (!cepInput) return;
+        
+        consultandoCep = true;
+        cepInput.classList.add('is-loading');
+        
+        // Adicionar ícone de loading
+        const icon = cepInput.parentElement.querySelector('.icon');
+        if (icon) {
+            icon.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        }
+    }
+    
+    // Função para remover loading do campo CEP
+    function removerLoadingCep() {
+        if (!cepInput) return;
+        
+        consultandoCep = false;
+        cepInput.classList.remove('is-loading');
+        
+        // Restaurar ícone original
+        const icon = cepInput.parentElement.querySelector('.icon');
+        if (icon) {
+            icon.innerHTML = '<i class="fas fa-map-marker-alt"></i>';
+        }
+    }
+    
+    // Função para formatar CEP enquanto digita
+    function formatarCepInput(cep) {
+        const cepLimpo = cep.replace(/\D/g, '');
+        
+        if (cepLimpo.length <= 5) {
+            return cepLimpo;
+        } else {
+            return cepLimpo.substring(0, 5) + '-' + cepLimpo.substring(5, 8);
+        }
+    }
+    
+    // Event listener para o campo CEP
+    if (cepInput) {
+        cepInput.addEventListener('input', function(e) {
+            const cep = e.target.value;
+            
+            // Formatar CEP enquanto digita
+            const cepFormatado = formatarCepInput(cep);
+            if (cepFormatado !== cep) {
+                e.target.value = cepFormatado;
+            }
+            
+            // Limpar timeout anterior
+            if (consultaCepTimeout) {
+                clearTimeout(consultaCepTimeout);
+            }
+            
+            // Limpar endereço se CEP foi apagado
+            if (cep.length < 8) {
+                limparEndereco();
+                return;
+            }
+            
+            // Aguardar 1 segundo após parar de digitar para consultar
+            consultaCepTimeout = setTimeout(async () => {
+                if (consultandoCep) return;
+                
+                try {
+                    const endereco = await consultarCep(cep);
+                    if (endereco) {
+                        preencherEndereco(endereco);
+                    }
+                } catch (error) {
+                    // Não mostrar erro para CEPs inválidos, apenas log
+                    console.log('CEP não encontrado ou inválido:', error.message);
+                }
+            }, 1000);
+        });
+        
+        // Event listener para quando o campo perde o foco
+        cepInput.addEventListener('blur', function(e) {
+            const cep = e.target.value;
+            
+            // Se o CEP tem 8 dígitos e não foi consultado ainda, consultar
+            if (cep.replace(/\D/g, '').length === 8 && !consultandoCep) {
+                setTimeout(async () => {
+                    try {
+                        const endereco = await consultarCep(cep);
+                        if (endereco) {
+                            preencherEndereco(endereco);
+                        }
+                    } catch (error) {
+                        console.log('CEP não encontrado:', error.message);
+                    }
+                }, 100);
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 

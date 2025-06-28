@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Usuários - DoaFácil{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="columns is-centered">
+            <div class="column is-10">
+                <div class="box">
+                    <div class="level">
+                        <div class="level-left">
+                            <div class="level-item">
+                                <h1 class="title">
+                                    <i class="fas fa-users mr-2"></i>
+                                    Gerenciar Usuários
+                                </h1>
+                            </div>
+                        </div>
+                        <div class="level-right">
+                            <div class="level-item">
+                                <a href="{{ url_for('main.criar_usuario') }}" class="button is-primary">
+                                    <i class="fas fa-plus mr-1"></i>
+                                    Novo Usuário
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="table is-fullwidth is-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Usuário</th>
+                                    <th>E-mail</th>
+                                    <th>Tipo</th>
+                                    <th>Status</th>
+                                    <th>Data Criação</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for admin in pagination.items %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ admin.nome }}</strong>
+                                    </td>
+                                    <td>{{ admin.username }}</td>
+                                    <td>{{ admin.email }}</td>
+                                    <td>
+                                        {% if admin.role == 'admin_principal' %}
+                                            <span class="tag is-danger">Principal</span>
+                                        {% else %}
+                                            <span class="tag is-info">Unidade</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if admin.ativo %}
+                                            <span class="tag is-success">Ativo</span>
+                                        {% else %}
+                                            <span class="tag is-danger">Inativo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ admin.data_criacao.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        <div class="buttons are-small">
+                                            <a href="{{ url_for('main.editar_usuario', admin_id=admin.id) }}" 
+                                               class="button is-info">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Paginação -->
+                    {% if pagination.pages > 1 %}
+                    <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+                        {% if pagination.has_prev %}
+                            <a href="{{ url_for('main.gerenciar_usuarios', page=pagination.prev_num) }}" 
+                               class="pagination-previous">
+                                <i class="fas fa-chevron-left mr-1"></i>
+                                Anterior
+                            </a>
+                        {% else %}
+                            <span class="pagination-previous" disabled>
+                                <i class="fas fa-chevron-left mr-1"></i>
+                                Anterior
+                            </span>
+                        {% endif %}
+                        
+                        {% if pagination.has_next %}
+                            <a href="{{ url_for('main.gerenciar_usuarios', page=pagination.next_num) }}" 
+                               class="pagination-next">
+                                Próxima
+                                <i class="fas fa-chevron-right ml-1"></i>
+                            </a>
+                        {% else %}
+                            <span class="pagination-next" disabled>
+                                Próxima
+                                <i class="fas fa-chevron-right ml-1"></i>
+                            </span>
+                        {% endif %}
+                        
+                        <ul class="pagination-list">
+                            {% for page_num in pagination.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != pagination.page %}
+                                        <li>
+                                            <a href="{{ url_for('main.gerenciar_usuarios', page=page_num) }}" 
+                                               class="pagination-link">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li>
+                                            <span class="pagination-link is-current">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li><span class="pagination-ellipsis">&hellip;</span></li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 

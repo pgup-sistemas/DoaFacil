@@ -22,6 +22,7 @@ def create_admin():
             username='admin',
             email='admin@doafacil.com',
             nome='Administrador Principal',
+            role='admin_principal',
             ativo=True
         )
         admin.set_password('admin123')

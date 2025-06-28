@@ -2,6 +2,93 @@
 
 {% block title %}Dashboard Administrativo - DoaFácil{% endblock %}
 
+{% block extra_css %}
+<style>
+.dashboard-stats-scroll {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 1rem;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+    scrollbar-width: thin;
+}
+
+.dashboard-stat-card {
+    min-width: 170px;
+    min-height: 120px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    border-radius: 10px;
+    transition: box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 0.5rem;
+}
+
+.dashboard-stat-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+}
+
+@media (max-width: 768px) {
+    .dashboard-stat-card {
+        min-width: 140px;
+        min-height: 100px;
+        padding: 0.7rem 0.3rem;
+    }
+}
+
+.filter-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.action-buttons .button {
+    margin: 0;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+}
+
+.quick-actions {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.quick-actions .title {
+    color: white;
+}
+
+.quick-actions .button {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.quick-actions .button:hover {
+    background: rgba(255,255,255,0.3);
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <!-- Header -->
 <section class="hero is-primary is-bold">
@@ -17,15 +104,15 @@
                         Bem-vindo, {{ session.get('admin_nome', 'Administrador') }}!
                     </h2>
                 </div>
-                <div class="column is-4 has-text-centered">
+                <div class="column is-4 has-text-right">
                     <div class="buttons">
-                        <a href="{{ url_for('main.cadastrar_unidade') }}" class="button is-white is-medium is-rounded">
+                        <a href="{{ url_for('main.cadastrar_unidade') }}" class="button is-white is-outlined">
                             <i class="fas fa-plus mr-2"></i>
                             Nova Unidade
                         </a>
-                        <a href="{{ url_for('main.logout_admin') }}" class="button is-outlined is-white is-medium is-rounded">
-                            <i class="fas fa-sign-out-alt mr-2"></i>
-                            Sair
+                        <a href="{{ url_for('main.gerenciar_usuarios') }}" class="button is-white is-outlined">
+                            <i class="fas fa-users mr-2"></i>
+                            Usuários
                         </a>
                     </div>
                 </div>
@@ -34,93 +121,218 @@
     </div>
 </section>
 
-<!-- Stats -->
-<section class="section">
+<!-- Quick Actions -->
+<section class="section pt-3 pb-3">
     <div class="container">
-        <div class="columns">
-            <div class="column is-3">
-                <div class="card">
-                    <div class="card-content has-text-centered">
-                        <div class="content">
-                            <span class="icon is-large has-text-info">
-                                <i class="fas fa-building fa-2x"></i>
-                            </span>
-                            <h4 class="title is-4">{{ unidades|length }}</h4>
-                            <p class="subtitle is-6">Unidades Cadastradas</p>
+        <div class="quick-actions">
+            <h3 class="title is-4 mb-4">
+                <i class="fas fa-bolt mr-2"></i>
+                Ações Rápidas
+            </h3>
+            <div class="columns is-multiline">
+                <div class="column is-3">
+                    <a href="{{ url_for('main.cadastrar_unidade') }}" class="button is-fullwidth">
+                        <i class="fas fa-building mr-2"></i>
+                        Cadastrar Unidade
+                    </a>
+                </div>
+                <div class="column is-3">
+                    <a href="{{ url_for('main.listas_ativas') }}" class="button is-fullwidth">
+                        <i class="fas fa-list mr-2"></i>
+                        Listas Ativas
+                    </a>
+                </div>
+                <div class="column is-3">
+                    <a href="{{ url_for('main.listas_concluidas') }}" class="button is-fullwidth">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Listas Concluídas
+                    </a>
+                </div>
+                <div class="column is-3">
+                    <a href="{{ url_for('main.gerenciar_usuarios') }}" class="button is-fullwidth">
+                        <i class="fas fa-users mr-2"></i>
+                        Gerenciar Usuários
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats -->
+<section class="section pt-3 pb-3">
+    <div class="container">
+        <div class="dashboard-stats-scroll">
+            <div class="dashboard-stat-card has-text-centered">
+                <span class="icon is-large has-text-info">
+                    <i class="fas fa-building fa-2x"></i>
+                </span>
+                <h4 class="title is-4">{{ unidades|length }}</h4>
+                <p class="subtitle is-6">Unidades<br>Cadastradas</p>
+            </div>
+            <div class="dashboard-stat-card has-text-centered">
+                <span class="icon is-large has-text-primary">
+                    <i class="fas fa-list fa-2x"></i>
+                </span>
+                <h4 class="title is-4">{{ total_listas }}</h4>
+                <p class="subtitle is-6">Total<br>de Listas</p>
+            </div>
+            <div class="dashboard-stat-card has-text-centered">
+                <span class="icon is-large has-text-success">
+                    <i class="fas fa-play fa-2x"></i>
+                </span>
+                <h4 class="title is-4">{{ total_ativas }}</h4>
+                <p class="subtitle is-6">Listas<br>Ativas</p>
+            </div>
+            <div class="dashboard-stat-card has-text-centered">
+                <span class="icon is-large has-text-warning">
+                    <i class="fas fa-check-circle fa-2x"></i>
+                </span>
+                <h4 class="title is-4">{{ total_concluidas }}</h4>
+                <p class="subtitle is-6">Listas<br>Concluídas</p>
+            </div>
+            <div class="dashboard-stat-card has-text-centered">
+                <span class="icon is-large has-text-danger">
+                    <i class="fas fa-ban fa-2x"></i>
+                </span>
+                <h4 class="title is-4">{{ total_canceladas }}</h4>
+                <p class="subtitle is-6">Listas<br>Canceladas</p>
+            </div>
+            <div class="dashboard-stat-card has-text-centered">
+                <span class="icon is-large has-text-warning">
+                    <i class="fas fa-heart fa-2x"></i>
+                </span>
+                <h4 class="title is-4">{{ total_doacoes }}</h4>
+                <p class="subtitle is-6">Total<br>de Doações</p>
+            </div>
+            <div class="dashboard-stat-card has-text-centered">
+                <span class="icon is-large has-text-danger">
+                    <i class="fas fa-users fa-2x"></i>
+                </span>
+                <h4 class="title is-4">{{ total_doadores_unicos }}</h4>
+                <p class="subtitle is-6">Doadores<br>Únicos</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Filtros Avançados -->
+<section class="section pt-3 pb-3">
+    <div class="container">
+        <div class="filter-section">
+            <h4 class="title is-5 mb-4">
+                <i class="fas fa-filter mr-2"></i>
+                Filtros Avançados
+            </h4>
+            <div class="columns is-multiline">
+                <div class="column is-3">
+                    <div class="field">
+                        <label class="label">Categoria</label>
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                                <select id="filtro-categoria">
+                                    <option value="">Todas as categorias</option>
+                                    <option value="religiosa">Religiosa</option>
+                                    <option value="social">Social</option>
+                                    <option value="educacional">Educacional</option>
+                                    <option value="saude">Saúde</option>
+                                    <option value="ambiental">Ambiental</option>
+                                    <option value="cultural">Cultural</option>
+                                    <option value="esportiva">Esportiva</option>
+                                    <option value="outro">Outro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-3">
+                    <div class="field">
+                        <label class="label">Estado</label>
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                                <select id="filtro-estado">
+                                    <option value="">Todos os estados</option>
+                                    <option value="AC">Acre</option>
+                                    <option value="AL">Alagoas</option>
+                                    <option value="AP">Amapá</option>
+                                    <option value="AM">Amazonas</option>
+                                    <option value="BA">Bahia</option>
+                                    <option value="CE">Ceará</option>
+                                    <option value="DF">Distrito Federal</option>
+                                    <option value="ES">Espírito Santo</option>
+                                    <option value="GO">Goiás</option>
+                                    <option value="MA">Maranhão</option>
+                                    <option value="MT">Mato Grosso</option>
+                                    <option value="MS">Mato Grosso do Sul</option>
+                                    <option value="MG">Minas Gerais</option>
+                                    <option value="PA">Pará</option>
+                                    <option value="PB">Paraíba</option>
+                                    <option value="PR">Paraná</option>
+                                    <option value="PE">Pernambuco</option>
+                                    <option value="PI">Piauí</option>
+                                    <option value="RJ">Rio de Janeiro</option>
+                                    <option value="RN">Rio Grande do Norte</option>
+                                    <option value="RS">Rio Grande do Sul</option>
+                                    <option value="RO">Rondônia</option>
+                                    <option value="RR">Roraima</option>
+                                    <option value="SC">Santa Catarina</option>
+                                    <option value="SP">São Paulo</option>
+                                    <option value="SE">Sergipe</option>
+                                    <option value="TO">Tocantins</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-3">
+                    <div class="field">
+                        <label class="label">Tipo de Organização</label>
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                                <select id="filtro-tipo">
+                                    <option value="">Todos os tipos</option>
+                                    <option value="igreja">Igreja</option>
+                                    <option value="ong">ONG</option>
+                                    <option value="associacao">Associação</option>
+                                    <option value="empresa">Empresa</option>
+                                    <option value="escola">Escola</option>
+                                    <option value="hospital">Hospital</option>
+                                    <option value="orfanato">Orfanato</option>
+                                    <option value="asilo">Asilo</option>
+                                    <option value="outro">Outro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-3">
+                    <div class="field">
+                        <label class="label">Status</label>
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                                <select id="filtro-status">
+                                    <option value="">Todos os status</option>
+                                    <option value="ativa">Ativa</option>
+                                    <option value="concluida">Concluída</option>
+                                    <option value="cancelada">Cancelada</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="column is-3">
-                <div class="card">
-                    <div class="card-content has-text-centered">
-                        <div class="content">
-                            <span class="icon is-large has-text-success">
-                                <i class="fas fa-list fa-2x"></i>
-                            </span>
-                            <h4 class="title is-4">
-                                {% set total_listas = 0 %}
-                                {% for unidade in unidades %}
-                                    {% set total_listas = total_listas + unidade.listas|length %}
-                                {% endfor %}
-                                {{ total_listas }}
-                            </h4>
-                            <p class="subtitle is-6">Total de Listas</p>
-                        </div>
-                    </div>
+            <div class="field is-grouped">
+                <div class="control">
+                    <button class="button is-primary" onclick="aplicarFiltros()">
+                        <i class="fas fa-search mr-2"></i>
+                        Aplicar Filtros
+                    </button>
                 </div>
-            </div>
-            
-            <div class="column is-3">
-                <div class="card">
-                    <div class="card-content has-text-centered">
-                        <div class="content">
-                            <span class="icon is-large has-text-warning">
-                                <i class="fas fa-heart fa-2x"></i>
-                            </span>
-                            <h4 class="title is-4">
-                                {% set total_doacoes = 0 %}
-                                {% for unidade in unidades %}
-                                    {% for lista in unidade.listas %}
-                                        {% for item in lista.itens %}
-                                            {% set total_doacoes = total_doacoes + item.doacoes|length %}
-                                        {% endfor %}
-                                    {% endfor %}
-                                {% endfor %}
-                                {{ total_doacoes }}
-                            </h4>
-                            <p class="subtitle is-6">Total de Doações</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="column is-3">
-                <div class="card">
-                    <div class="card-content has-text-centered">
-                        <div class="content">
-                            <span class="icon is-large has-text-danger">
-                                <i class="fas fa-users fa-2x"></i>
-                            </span>
-                            <h4 class="title is-4">
-                                {% set doadores_unicos = [] %}
-                                {% for unidade in unidades %}
-                                    {% for lista in unidade.listas %}
-                                        {% for item in lista.itens %}
-                                            {% for doacao in item.doacoes %}
-                                                {% if doacao.doador_nome not in doadores_unicos %}
-                                                    {% set _ = doadores_unicos.append(doacao.doador_nome) %}
-                                                {% endif %}
-                                            {% endfor %}
-                                        {% endfor %}
-                                    {% endfor %}
-                                {% endfor %}
-                                {{ doadores_unicos|length }}
-                            </h4>
-                            <p class="subtitle is-6">Doadores Únicos</p>
-                        </div>
-                    </div>
+                <div class="control">
+                    <button class="button is-light" onclick="limparFiltros()">
+                        <i class="fas fa-times mr-2"></i>
+                        Limpar Filtros
+                    </button>
                 </div>
             </div>
         </div>
@@ -152,10 +364,12 @@
                             <thead>
                                 <tr>
                                     <th>Unidade</th>
+                                    <th>Tipo/Categoria</th>
                                     <th>Responsável</th>
-                                    <th>E-mail</th>
+                                    <th>Contato</th>
+                                    <th>Localização</th>
                                     <th>Listas</th>
-                                    <th>Data de Criação</th>
+                                    <th>Status</th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
@@ -164,33 +378,71 @@
                                 <tr>
                                     <td>
                                         <strong>{{ unidade.nome }}</strong>
+                                        {% if unidade.nome_fantasia %}
+                                            <br><small class="has-text-grey">{{ unidade.nome_fantasia }}</small>
+                                        {% endif %}
                                         {% if unidade.descricao %}
-                                            <br><small class="has-text-grey">{{ unidade.descricao }}</small>
+                                            <br><small class="has-text-grey-light">{{ unidade.descricao[:50] }}{% if unidade.descricao|length > 50 %}...{% endif %}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if unidade.tipo_organizacao %}
+                                            <span class="tag is-info">{{ unidade.tipo_organizacao.title() }}</span>
+                                        {% endif %}
+                                        {% if unidade.categoria %}
+                                            <br><span class="tag is-light">{{ unidade.categoria.title() }}</span>
                                         {% endif %}
                                     </td>
                                     <td>{{ unidade.responsavel }}</td>
                                     <td>
                                         {% if unidade.email %}
                                             <a href="mailto:{{ unidade.email }}">{{ unidade.email }}</a>
+                                        {% endif %}
+                                        {% if unidade.telefone_fixo %}
+                                            <br><small>{{ unidade.telefone_fixo }}</small>
+                                        {% endif %}
+                                        {% if unidade.whatsapp_numero %}
+                                            <br><small><i class="fab fa-whatsapp"></i> {{ unidade.whatsapp_numero }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if unidade.cidade and unidade.estado %}
+                                            {{ unidade.cidade }}/{{ unidade.estado }}
                                         {% else %}
-                                            <span class="has-text-grey-light">-</span>
+                                            <span class="has-text-grey-light">Não informado</span>
                                         {% endif %}
                                     </td>
                                     <td>
                                         <span class="tag is-info">{{ unidade.listas|length }}</span>
+                                        {% set listas_ativas = unidade.listas|selectattr('ativa', 'equalto', true)|list %}
+                                        {% if listas_ativas %}
+                                            <br><small class="has-text-success">{{ listas_ativas|length }} ativa(s)</small>
+                                        {% endif %}
                                     </td>
-                                    <td>{{ unidade.data_criacao.strftime("%d/%m/%Y") }}</td>
                                     <td>
-                                        <div class="buttons are-small">
+                                        {% if unidade.ativo %}
+                                            <span class="tag is-success">Ativa</span>
+                                        {% else %}
+                                            <span class="tag is-danger">Inativa</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
                                             <a href="{{ url_for('main.criar_lista', unidade_id=unidade.id) }}" 
-                                               class="button is-success">
-                                                <i class="fas fa-plus mr-1"></i>
-                                                Nova Lista
+                                               class="button is-success is-small" title="Criar nova lista">
+                                                <i class="fas fa-plus"></i>
+                                            </a>
+                                            <a href="{{ url_for('main.editar_unidade', unidade_id=unidade.id) }}" 
+                                               class="button is-info is-small" title="Editar unidade">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{{ url_for('main.exportar_unidade_completa', unidade_id=unidade.id) }}" 
+                                               class="button is-warning is-small" title="Exportar dados">
+                                                <i class="fas fa-download"></i>
                                             </a>
                                             {% if unidade.listas %}
-                                                <a href="#" class="button is-info">
-                                                    <i class="fas fa-eye mr-1"></i>
-                                                    Ver Listas
+                                                <a href="{{ url_for('main.listas_unidade', unidade_id=unidade.id) }}" class="button is-primary is-small" title="Ver listas">
+                                                    <i class="fas fa-eye"></i>
                                                 </a>
                                             {% endif %}
                                         </div>
@@ -205,11 +457,12 @@
                         <div class="notification is-info">
                             <i class="fas fa-info-circle mr-2"></i>
                             Nenhuma unidade cadastrada ainda.
+                            <br>
+                            <a href="{{ url_for('main.cadastrar_unidade') }}" class="button is-info is-small mt-2">
+                                <i class="fas fa-plus mr-1"></i>
+                                Cadastrar Primeira Unidade
+                            </a>
                         </div>
-                        <a href="{{ url_for('main.cadastrar_unidade') }}" class="button is-primary is-medium">
-                            <i class="fas fa-plus mr-2"></i>
-                            Cadastrar Primeira Unidade
-                        </a>
                     </div>
                 {% endif %}
             </div>
@@ -217,7 +470,68 @@
     </div>
 </section>
 
-<!-- Recent Lists -->
+<!-- Paginação das Unidades -->
+{% if unidades_pagination and unidades_pagination.pages > 1 %}
+<section class="section pt-0">
+    <div class="container">
+        <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+            {% if unidades_pagination.has_prev %}
+                <a href="{{ url_for('main.admin_dashboard', page=unidades_pagination.prev_num) }}"
+                   class="pagination-previous">
+                    <i class="fas fa-chevron-left mr-1"></i>
+                    Anterior
+                </a>
+            {% else %}
+                <span class="pagination-previous" disabled>
+                    <i class="fas fa-chevron-left mr-1"></i>
+                    Anterior
+                </span>
+            {% endif %}
+            
+            {% if unidades_pagination.has_next %}
+                <a href="{{ url_for('main.admin_dashboard', page=unidades_pagination.next_num) }}"
+                   class="pagination-next">
+                    Próxima
+                    <i class="fas fa-chevron-right ml-1"></i>
+                </a>
+            {% else %}
+                <span class="pagination-next" disabled>
+                    Próxima
+                    <i class="fas fa-chevron-right ml-1"></i>
+                </span>
+            {% endif %}
+            
+            <ul class="pagination-list">
+                {% for page_num in unidades_pagination.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != unidades_pagination.page %}
+                            <li>
+                                <a href="{{ url_for('main.admin_dashboard', page=page_num) }}"
+                                   class="pagination-link">{{ page_num }}</a>
+                            </li>
+                        {% else %}
+                            <li>
+                                <span class="pagination-link is-current">{{ page_num }}</span>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li><span class="pagination-ellipsis">&hellip;</span></li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </nav>
+        
+        <div class="has-text-centered mt-3">
+            <p class="has-text-grey-light is-size-7">
+                Mostrando {{ unidades_pagination.items|length }} de {{ unidades_pagination.total }} unidades
+                (Página {{ unidades_pagination.page }} de {{ unidades_pagination.pages }})
+            </p>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Listas Recentes -->
 <section class="section">
     <div class="container">
         <div class="card">
@@ -228,78 +542,159 @@
                         Listas Recentes
                     </h3>
                 </div>
+                <div class="card-header-icon">
+                    <a href="{{ url_for('main.listas_ativas') }}" class="button is-primary is-small">
+                        <i class="fas fa-eye mr-1"></i>
+                        Ver Todas
+                    </a>
+                </div>
             </div>
             <div class="card-content">
-                {% set todas_listas = [] %}
-                {% for unidade in unidades %}
-                    {% for lista in unidade.listas %}
-                        {% set _ = todas_listas.append(lista) %}
-                    {% endfor %}
-                {% endfor %}
-                
-                {% if todas_listas %}
-                    {% set listas_ordenadas = todas_listas|sort(attribute='data_criacao', reverse=true) %}
-                    <div class="columns is-multiline">
-                        {% for lista in listas_ordenadas %}
-                            {% if loop.index <= 6 %}
-                            <div class="column is-4">
-                                <div class="card">
-                                    <div class="card-content">
-                                        <h4 class="title is-5">{{ lista.nome }}</h4>
-                                        <p class="subtitle is-6">
-                                            <i class="fas fa-building mr-1"></i>
-                                            {{ lista.unidade.nome }}
-                                        </p>
-                                        
-                                        <div class="level">
-                                            <div class="level-left">
-                                                <div class="level-item">
-                                                    <div>
-                                                        <p class="heading">Progresso</p>
-                                                        <p class="title">{{ "%.1f"|format(lista.percentual_conclusao) }}%</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="level-right">
-                                                <div class="level-item">
-                                                    <div>
-                                                        <p class="heading">Itens</p>
-                                                        <p class="title">{{ lista.itens|length }}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <progress class="progress is-primary" value="{{ lista.percentual_conclusao }}" max="100"></progress>
-                                        
-                                        <div class="buttons are-small mt-3">
+                {% if listas_recentes %}
+                    <div class="table-container">
+                        <table class="table is-fullwidth is-striped">
+                            <thead>
+                                <tr>
+                                    <th>Lista</th>
+                                    <th>Unidade</th>
+                                    <th>Progresso</th>
+                                    <th>Status</th>
+                                    <th>Data</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lista in listas_recentes %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ lista.nome }}</strong>
+                                        {% if lista.descricao %}
+                                            <br><small class="has-text-grey">{{ lista.descricao[:50] }}{% if lista.descricao|length > 50 %}...{% endif %}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ lista.unidade.nome }}</td>
+                                    <td>
+                                        <progress class="progress is-info" value="{{ lista.percentual_conclusao }}" max="100">
+                                            {{ "%.1f"|format(lista.percentual_conclusao) }}%
+                                        </progress>
+                                        <small>{{ "%.1f"|format(lista.percentual_conclusao) }}%</small>
+                                    </td>
+                                    <td>
+                                        {% if lista.ativa and not lista.concluida and not lista.cancelada %}
+                                            <span class="tag is-success">Ativa</span>
+                                        {% elif lista.concluida %}
+                                            <span class="tag is-warning">Concluída</span>
+                                        {% elif lista.cancelada %}
+                                            <span class="tag is-danger">Cancelada</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ lista.data_criacao.strftime("%d/%m/%Y") }}</td>
+                                    <td>
+                                        <div class="action-buttons">
                                             <a href="{{ url_for('main.visualizar_lista', slug=lista.slug) }}" 
-                                               class="button is-info">
-                                                <i class="fas fa-eye mr-1"></i>
-                                                Ver Pública
+                                               class="button is-info is-small" title="Ver lista">
+                                                <i class="fas fa-eye"></i>
                                             </a>
                                             <a href="{{ url_for('main.dashboard', token=lista.token_admin) }}" 
-                                               class="button is-warning">
-                                                <i class="fas fa-cog mr-1"></i>
-                                                Admin
+                                               class="button is-primary is-small" title="Dashboard">
+                                                <i class="fas fa-tachometer-alt"></i>
+                                            </a>
+                                            <a href="{{ url_for('main.exportar_pdf', slug=lista.slug) }}" 
+                                               class="button is-warning is-small" title="Exportar PDF">
+                                                <i class="fas fa-file-pdf"></i>
                                             </a>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endif %}
-                        {% endfor %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 {% else %}
                     <div class="has-text-centered">
-                        <p class="has-text-grey">
+                        <div class="notification is-light">
                             <i class="fas fa-info-circle mr-2"></i>
                             Nenhuma lista criada ainda.
-                        </p>
+                        </div>
                     </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </section>
+
+<script>
+function aplicarFiltros() {
+    const categoria = document.getElementById('filtro-categoria').value;
+    const estado = document.getElementById('filtro-estado').value;
+    const tipo = document.getElementById('filtro-tipo').value;
+    const status = document.getElementById('filtro-status').value;
+    
+    // Aqui você implementaria a lógica de filtro
+    console.log('Aplicando filtros:', { categoria, estado, tipo, status });
+    
+    // Por enquanto, apenas mostra uma notificação
+    mostrarNotificacao('Filtros aplicados!', 'success');
+}
+
+function limparFiltros() {
+    document.getElementById('filtro-categoria').value = '';
+    document.getElementById('filtro-estado').value = '';
+    document.getElementById('filtro-tipo').value = '';
+    document.getElementById('filtro-status').value = '';
+    
+    mostrarNotificacao('Filtros limpos!', 'info');
+}
+
+function mostrarNotificacao(mensagem, tipo) {
+    // Criar notificação
+    const notificacao = document.createElement('div');
+    notificacao.className = `notification is-${tipo === 'success' ? 'success' : tipo === 'error' ? 'danger' : 'info'} is-light`;
+    notificacao.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        max-width: 300px;
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    notificacao.innerHTML = `
+        <button class="delete" onclick="this.parentElement.remove()"></button>
+        <i class="fas fa-${tipo === 'success' ? 'check-circle' : tipo === 'error' ? 'exclamation-triangle' : 'info-circle'} mr-2"></i>
+        ${mensagem}
+    `;
+    
+    document.body.appendChild(notificacao);
+    
+    // Remover automaticamente após 3 segundos (consistente com flash messages)
+    setTimeout(() => {
+        if (notificacao.parentElement) {
+            notificacao.style.transition = 'opacity 0.3s ease-out';
+            notificacao.style.opacity = '0';
+            setTimeout(() => {
+                if (notificacao.parentElement) {
+                    notificacao.remove();
+                }
+            }, 300);
+        }
+    }, 3000);
+}
+
+// Adicionar animação CSS
+const style = document.createElement('style');
+style.textContent = `
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+`;
+document.head.appendChild(style);
+</script>
 {% endblock %} 

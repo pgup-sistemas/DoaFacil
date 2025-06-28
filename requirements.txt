@@ -6,6 +6,7 @@ click==8.2.1
 cssselect2==0.8.0
 dnspython==2.7.0
 email_validator==2.2.0
+et_xmlfile==2.0.0
 Flask==2.3.3
 Flask-Mail==0.9.1
 Flask-RESTful==0.3.10
@@ -13,11 +14,13 @@ Flask-SQLAlchemy==3.0.5
 Flask-WTF==1.1.1
 fonttools==4.58.4
 greenlet==3.2.3
+gunicorn==21.2.0
 html5lib==1.1
 idna==3.10
 itsdangerous==2.2.0
 Jinja2==3.1.6
 MarkupSafe==3.0.2
+openpyxl==3.1.5
 pillow==11.2.1
 pycparser==2.22
 pydyf==0.11.0
@@ -25,11 +28,12 @@ PyJWT==2.8.0
 pyphen==0.17.2
 python-dotenv==1.0.0
 pytz==2025.2
+requests==2.31.0
 six==1.17.0
 SQLAlchemy==2.0.41
 tinycss2==1.4.0
 typing_extensions==4.14.0
-weasyprint==60.2
+weasyprint==62.2
 webencodings==0.5.1
 Werkzeug==2.3.7
 WTForms==3.0.1

@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}Listas Ativas - DoaFácil{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<section class="hero is-primary is-bold">
+    <div class="hero-body">
+        <div class="container">
+            <div class="columns is-vcentered">
+                <div class="column is-8">
+                    <h1 class="title is-2 has-text-white">
+                        <i class="fas fa-list-alt mr-3"></i>
+                        Listas de Arrecadação Ativas
+                    </h1>
+                    <h2 class="subtitle is-4 has-text-white">
+                        Gerencie suas campanhas de doação em andamento
+                    </h2>
+                </div>
+                <div class="column is-4 has-text-right">
+                    <a href="{{ url_for('main.admin_dashboard') }}" class="button is-light is-rounded">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Voltar ao Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Listas Ativas -->
+<section class="section">
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-title">
+                    <h3 class="title is-4">
+                        <i class="fas fa-play-circle mr-2"></i>
+                        Campanhas em Andamento
+                    </h3>
+                </div>
+                <div class="card-header-icon">
+                    <a href="{{ url_for('main.listas_concluidas') }}" class="button is-info is-small">
+                        <i class="fas fa-check-circle mr-1"></i>
+                        Ver Concluídas
+                    </a>
+                </div>
+            </div>
+            <div class="card-content">
+                {% if pagination.items %}
+                    <div class="table-container">
+                        <table class="table is-fullwidth is-striped is-hoverable">
+                            <thead>
+                                <tr>
+                                    <th>Lista</th>
+                                    <th>Unidade</th>
+                                    <th>Progresso</th>
+                                    <th>Itens</th>
+                                    <th>Data de Criação</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lista in pagination.items %}
+                                <tr>
+                                    <td>
+                                        <div>
+                                            <strong>{{ lista.nome }}</strong>
+                                            {% if lista.data_conclusao and not lista.concluida %}
+                                                <span class="tag is-info is-light ml-1">
+                                                    <i class="fas fa-redo mr-1"></i>
+                                                    Campanha Reativada
+                                                </span>
+                                            {% endif %}
+                                            {% if lista.descricao %}
+                                                <br><small class="has-text-grey">{{ lista.descricao }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="tag is-info">{{ lista.unidade.nome }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="level is-mobile">
+                                            <div class="level-left">
+                                                <div class="level-item">
+                                                    <progress class="progress {{ 'is-success' if lista.percentual_conclusao >= 100 else 'is-warning' if lista.percentual_conclusao >= 75 else 'is-info' if lista.percentual_conclusao >= 50 else 'is-danger' }}" 
+                                                              value="{{ lista.percentual_conclusao }}" max="100" style="width: 80px; height: 8px;">
+                                                    </progress>
+                                                </div>
+                                            </div>
+                                            <div class="level-right">
+                                                <div class="level-item">
+                                                    <small class="has-text-grey">{{ "%.0f"|format(lista.percentual_conclusao) }}%</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="tag is-light">{{ lista.itens|length }} itens</span>
+                                    </td>
+                                    <td>{{ lista.data_criacao.strftime("%d/%m/%Y") }}</td>
+                                    <td>
+                                        {% if lista.modo == 'aberto' %}
+                                            <span class="tag is-success is-small">
+                                                <i class="fas fa-unlock mr-1"></i>
+                                                Aberta
+                                            </span>
+                                        {% else %}
+                                            <span class="tag is-warning is-small">
+                                                <i class="fas fa-lock mr-1"></i>
+                                                Fechada
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="buttons are-small">
+                                            <a href="{{ url_for('main.visualizar_lista', slug=lista.slug) }}" 
+                                               class="button is-info" target="_blank">
+                                                <i class="fas fa-eye mr-1"></i>
+                                                Ver
+                                            </a>
+                                            {% if lista.modo == 'aberto' and not lista.concluida and not lista.cancelada %}
+                                            <a href="{{ url_for('main.adicionar_itens', lista_id=lista.id) }}" 
+                                               class="button is-success">
+                                                <i class="fas fa-plus mr-1"></i>
+                                                Itens
+                                            </a>
+                                            {% endif %}
+                                            {% if not lista.cancelada %}
+                                                {% if lista.percentual_conclusao >= 100 %}
+                                                    <form method="POST" action="{{ url_for('main.concluir_lista', lista_id=lista.id) }}" style="display: inline;">
+                                                        <button type="submit" class="button is-warning" 
+                                                                onclick="return confirm('Confirmar conclusão da lista?')">
+                                                            <i class="fas fa-check mr-1"></i>
+                                                            Concluir
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                                <!-- Cancelar -->
+                                                <button class="button is-danger" onclick="openCancelarModal({{ lista.id }})">
+                                                    <i class="fas fa-ban mr-1"></i>
+                                                    Cancelar
+                                                </button>
+                                            {% else %}
+                                                <!-- Reativar -->
+                                                {% if not lista.concluida %}
+                                                <form method="POST" action="{{ url_for('main.reativar_lista', lista_id=lista.id) }}" style="display: inline;">
+                                                    <button type="submit" class="button is-success" onclick="return confirm('Reativar esta lista?')">
+                                                        <i class="fas fa-redo mr-1"></i>
+                                                        Reativar
+                                                    </button>
+                                                </form>
+                                                {% endif %}
+                                                {% if admin.is_admin_principal() %}
+                                                <!-- Excluir -->
+                                                <form method="POST" action="{{ url_for('main.excluir_lista', lista_id=lista.id) }}" style="display: inline;">
+                                                    <button type="submit" class="button is-danger" onclick="return confirm('Excluir permanentemente esta lista? Esta ação não pode ser desfeita!')">
+                                                        <i class="fas fa-trash mr-1"></i>
+                                                        Excluir
+                                                    </button>
+                                                </form>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                        {% if lista.cancelada %}
+                                            <span class="tag is-danger is-light mt-1">Cancelada</span>
+                                            {% if lista.motivo_cancelamento %}
+                                                <p class="has-text-danger is-size-7 mt-1"><strong>Motivo:</strong> {{ lista.motivo_cancelamento }}</p>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Paginação -->
+                    {% if pagination.pages > 1 %}
+                    <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+                        {% if pagination.has_prev %}
+                            <a href="{{ url_for('main.listas_ativas', page=pagination.prev_num) }}" 
+                               class="pagination-previous">
+                                <i class="fas fa-chevron-left mr-1"></i>
+                                Anterior
+                            </a>
+                        {% else %}
+                            <span class="pagination-previous" disabled>
+                                <i class="fas fa-chevron-left mr-1"></i>
+                                Anterior
+                            </span>
+                        {% endif %}
+                        
+                        {% if pagination.has_next %}
+                            <a href="{{ url_for('main.listas_ativas', page=pagination.next_num) }}" 
+                               class="pagination-next">
+                                Próxima
+                                <i class="fas fa-chevron-right ml-1"></i>
+                            </a>
+                        {% else %}
+                            <span class="pagination-next" disabled>
+                                Próxima
+                                <i class="fas fa-chevron-right ml-1"></i>
+                            </span>
+                        {% endif %}
+                        
+                        <ul class="pagination-list">
+                            {% for page_num in pagination.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != pagination.page %}
+                                        <li>
+                                            <a href="{{ url_for('main.listas_ativas', page=page_num) }}" 
+                                               class="pagination-link">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li>
+                                            <span class="pagination-link is-current">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li><span class="pagination-ellipsis">&hellip;</span></li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    
+                {% else %}
+                    <div class="has-text-centered">
+                        <div class="notification is-info">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Nenhuma lista ativa encontrada.
+                        </div>
+                        <a href="{{ url_for('main.admin_dashboard') }}" class="button is-primary is-medium">
+                            <i class="fas fa-plus mr-2"></i>
+                            Criar Nova Lista
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Modal Cancelar Lista -->
+<div id="cancelar-modal" class="modal">
+    <div class="modal-background" onclick="closeCancelarModal()"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">
+                <i class="fas fa-ban mr-2"></i>
+                Cancelar Lista
+            </p>
+            <button class="delete" aria-label="close" onclick="closeCancelarModal()"></button>
+        </header>
+        <form id="cancelar-form" method="POST">
+            <section class="modal-card-body">
+                <div class="content">
+                    <div class="notification is-danger is-light">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Tem certeza que deseja cancelar esta lista? Nenhuma nova doação será permitida até reativação.
+                    </div>
+                    <div class="field">
+                        <label class="label">Motivo do Cancelamento</label>
+                        <div class="control">
+                            <textarea class="textarea" name="motivo_cancelamento" placeholder="Descreva o motivo do cancelamento" required></textarea>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <button type="submit" class="button is-danger is-rounded">
+                    <i class="fas fa-ban mr-1"></i>
+                    Cancelar Lista
+                </button>
+                <button type="button" class="button is-light is-rounded" onclick="closeCancelarModal()">Voltar</button>
+            </footer>
+        </form>
+    </div>
+</div>
+
+<script>
+function openCancelarModal(listaId) {
+    const modal = document.getElementById('cancelar-modal');
+    const form = document.getElementById('cancelar-form');
+    form.action = `/admin/lista/${listaId}/cancelar`;
+    modal.classList.add('is-active');
+    document.body.style.overflow = 'hidden';
+}
+function closeCancelarModal() {
+    const modal = document.getElementById('cancelar-modal');
+    modal.classList.remove('is-active');
+    document.body.style.overflow = 'auto';
+}
+</script>
+{% endblock %} 

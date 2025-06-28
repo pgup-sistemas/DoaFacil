@@ -90,9 +90,7 @@
                             </div>
                             
                             <div class="field">
-                                <label class="label">
-                                    {{ form.aceita_pix.label }}
-                                </label>
+                                <label class="label">{{ form.aceita_pix.label }}</label>
                                 <div class="control">
                                     <label class="checkbox">
                                         {{ form.aceita_pix() }}
@@ -126,6 +124,26 @@
                                 <p class="help">
                                     Pode ser CPF, telefone, e-mail ou chave aleatória
                                 </p>
+                            </div>
+                            
+                            <div class="field">
+                                <label class="label">{{ form.solicitar_dados_pessoais.label }}</label>
+                                <div class="control">
+                                    <label class="checkbox">
+                                        {{ form.solicitar_dados_pessoais() }}
+                                        Incluir solicitação de dados pessoais do doador (nome, CPF, CEP, contato)
+                                    </label>
+                                </div>
+                                <p class="help">
+                                    Marque esta opção para listas externas ou quando for necessário identificar o doador.
+                                </p>
+                                {% if form.solicitar_dados_pessoais.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.solicitar_dados_pessoais.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
                             </div>
                             
                             <div class="field is-grouped">

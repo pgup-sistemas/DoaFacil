@@ -43,8 +43,33 @@
         }
         
         .footer {
-            background-color: #f5f5f5;
-            padding: 3rem 1.5rem;
+            background-color: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            padding: 2rem 1.5rem;
+            margin-top: auto;
+        }
+
+        /* Animação para notificações */
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Estilo para notificações flash */
+        .flash-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 300px;
+            animation: slideIn 0.3s ease-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
     </style>
     
@@ -92,7 +117,7 @@
                                 <i class="fas fa-user-shield mr-1"></i>
                                 {{ session.get('admin_nome', 'Admin') }}
                             </span>
-                            <a class="button is-light" href="{{ url_for('main.logout_admin') }}">
+                            <a class="button is-light is-small" href="{{ url_for('main.logout_admin') }}">
                                 <i class="fas fa-sign-out-alt mr-1"></i>
                                 Sair
                             </a>
@@ -108,20 +133,6 @@
         </div>
     </nav>
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="container mt-4">
-                {% for category, message in messages %}
-                    <div class="notification is-{{ 'success' if category == 'success' else 'danger' if category == 'error' else 'info' }} is-light">
-                        <button class="delete" onclick="this.parentElement.remove()"></button>
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
-
     <!-- Main Content -->
     <main>
         {% block content %}{% endblock %}
@@ -129,15 +140,39 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <div class="content has-text-centered">
-            <p>
-                <strong>DoaFácil</strong> - Sistema de Arrecadações e Doações
-            </p>
-            <p>
-                <small>Desenvolvido com ❤️ para facilitar a solidariedade</small>
-            </p>
+        <div class="container">
+            <div class="content has-text-centered">
+                <p class="has-text-weight-semibold">
+                    <i class="fas fa-heart has-text-danger mr-2"></i>
+                    DoaFácil
+                </p>
+                <p class="has-text-grey-light is-size-7">
+                    Sistema de Arrecadações e Doações
+                </p>
+                <p class="has-text-grey-light is-size-7 mt-2">
+                    © 2025 DoaFácil. Todos os direitos reservados.
+                </p>
+                <p class="has-text-grey-light is-size-7 mt-1">
+                    Desenvolvido por <strong>Oézios Normando</strong> | <strong>PageUp Sistemas</strong>
+                </p>
+            </div>
         </div>
     </footer>
+
+    <!-- Flash Messages Script -->
+    <script>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                window.flashMessages = [
+                    {% for category, message in messages %}
+                        { message: '{{ message|e }}', category: '{{ category|e }}' },
+                    {% endfor %}
+                ];
+            {% else %}
+                window.flashMessages = [];
+            {% endif %}
+        {% endwith %}
+    </script>
 
     <!-- JavaScript -->
     <script>
@@ -156,17 +191,60 @@
                     });
                 });
             }
+
+            // Sistema de Flash Messages melhorado
+            if (window.flashMessages) {
+                window.flashMessages.forEach(msg => {
+                    mostrarFlashMessage(msg.message, msg.category);
+                });
+            }
         });
 
-        // Auto-hide notifications after 5 seconds
-        setTimeout(() => {
-            const notifications = document.querySelectorAll('.notification');
-            notifications.forEach(notification => {
-                notification.style.transition = 'opacity 0.5s ease-out';
-                notification.style.opacity = '0';
-                setTimeout(() => notification.remove(), 500);
-            });
-        }, 5000);
+        // Função para mostrar flash messages no estilo do PIX
+        function mostrarFlashMessage(mensagem, categoria) {
+            // Mapear categorias para tipos do Bulma
+            const tipoMap = {
+                'success': 'success',
+                'error': 'danger',
+                'warning': 'warning',
+                'info': 'info'
+            };
+            
+            const tipo = tipoMap[categoria] || 'info';
+            const iconeMap = {
+                'success': 'check-circle',
+                'danger': 'exclamation-triangle',
+                'warning': 'exclamation-triangle',
+                'info': 'info-circle'
+            };
+            
+            const icone = iconeMap[tipo] || 'info-circle';
+            
+            // Criar notificação
+            const notificacao = document.createElement('div');
+            notificacao.className = `notification is-${tipo} is-light flash-notification`;
+            
+            notificacao.innerHTML = `
+                <button class="delete" onclick="this.parentElement.remove()"></button>
+                <i class="fas fa-${icone} mr-2"></i>
+                ${mensagem}
+            `;
+            
+            document.body.appendChild(notificacao);
+            
+            // Remover automaticamente após 3 segundos (mais rápido que antes)
+            setTimeout(() => {
+                if (notificacao.parentElement) {
+                    notificacao.style.transition = 'opacity 0.3s ease-out';
+                    notificacao.style.opacity = '0';
+                    setTimeout(() => {
+                        if (notificacao.parentElement) {
+                            notificacao.remove();
+                        }
+                    }, 300);
+                }
+            }, 3000);
+        }
     </script>
     
     {% block extra_js %}{% endblock %}

@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+
+{% block title %}Listas Concluídas - DoaFácil{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<section class="hero is-success is-bold">
+    <div class="hero-body">
+        <div class="container">
+            <div class="columns is-vcentered">
+                <div class="column is-8">
+                    <h1 class="title is-2 has-text-white">
+                        <i class="fas fa-check-circle mr-3"></i>
+                        Listas de Arrecadação Concluídas
+                    </h1>
+                    <h2 class="subtitle is-4 has-text-white">
+                        Histórico de campanhas finalizadas e relatórios
+                    </h2>
+                </div>
+                <div class="column is-4 has-text-right">
+                    <a href="{{ url_for('main.listas_ativas') }}" class="button is-light is-rounded">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Voltar às Ativas
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Listas Concluídas -->
+<section class="section">
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-title">
+                    <h3 class="title is-4">
+                        <i class="fas fa-trophy mr-2"></i>
+                        Campanhas Finalizadas
+                    </h3>
+                </div>
+                <div class="card-header-icon">
+                    <div class="buttons are-small">
+                        <a href="{{ url_for('main.listas_ativas') }}" class="button is-primary">
+                            <i class="fas fa-play-circle mr-1"></i>
+                            Ver Ativas
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-content">
+                {% if pagination.items %}
+                    <div class="table-container">
+                        <table class="table is-fullwidth is-striped is-hoverable">
+                            <thead>
+                                <tr>
+                                    <th>Lista</th>
+                                    <th>Unidade</th>
+                                    <th>Resultado Final</th>
+                                    <th>Itens</th>
+                                    <th>Data de Conclusão</th>
+                                    <th>Duração</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lista in pagination.items %}
+                                <tr>
+                                    <td>
+                                        <div>
+                                            <strong>{{ lista.nome }}</strong>
+                                            {% if lista.data_conclusao and not lista.concluida %}
+                                                <span class="tag is-info is-light ml-1">
+                                                    <i class="fas fa-redo mr-1"></i>
+                                                    Campanha Reativada
+                                                </span>
+                                            {% endif %}
+                                            {% if lista.descricao %}
+                                                <br><small class="has-text-grey">{{ lista.descricao }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="tag is-info">{{ lista.unidade.nome }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="level is-mobile">
+                                            <div class="level-left">
+                                                <div class="level-item">
+                                                    <progress class="progress is-success" 
+                                                              value="{{ lista.percentual_conclusao }}" max="100" style="width: 80px; height: 8px;">
+                                                    </progress>
+                                                </div>
+                                            </div>
+                                            <div class="level-right">
+                                                <div class="level-item">
+                                                    <small class="has-text-success has-text-weight-semibold">{{ "%.0f"|format(lista.percentual_conclusao) }}%</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <small class="has-text-grey">
+                                            {{ lista.total_arrecadado }} / {{ lista.total_itens }} unidades
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="tag is-light">{{ lista.itens|length }} itens</span>
+                                    </td>
+                                    <td>{{ lista.data_conclusao.strftime("%d/%m/%Y") if lista.data_conclusao else "N/A" }}</td>
+                                    <td>
+                                        {% if lista.data_conclusao and lista.data_criacao %}
+                                            {% set duracao = (lista.data_conclusao - lista.data_criacao).days %}
+                                            <span class="tag is-light">
+                                                {{ duracao }} dia{{ 's' if duracao != 1 else '' }}
+                                            </span>
+                                        {% else %}
+                                            <span class="has-text-grey-light">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="buttons are-small">
+                                            <a href="{{ url_for('main.visualizar_lista', slug=lista.slug) }}" 
+                                               class="button is-info" target="_blank">
+                                                <i class="fas fa-eye mr-1"></i>
+                                                Ver
+                                            </a>
+                                            <div class="dropdown is-hoverable">
+                                                <div class="dropdown-trigger">
+                                                    <button class="button is-success is-small">
+                                                        <span>Exportar</span>
+                                                        <span class="icon is-small">
+                                                            <i class="fas fa-angle-down"></i>
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                                <div class="dropdown-menu">
+                                                    <div class="dropdown-content">
+                                                        <a href="{{ url_for('main.exportar_csv', slug=lista.slug) }}" 
+                                                           class="dropdown-item">
+                                                            <i class="fas fa-file-csv mr-2"></i>
+                                                            Exportar CSV
+                                                        </a>
+                                                        <a href="{{ url_for('main.exportar_excel', slug=lista.slug) }}" 
+                                                           class="dropdown-item">
+                                                            <i class="fas fa-file-excel mr-2"></i>
+                                                            Exportar Excel
+                                                        </a>
+                                                        <a href="{{ url_for('main.exportar_pdf', slug=lista.slug) }}" 
+                                                           class="dropdown-item">
+                                                            <i class="fas fa-file-pdf mr-2"></i>
+                                                            Exportar PDF
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% if admin.can_manage_lista(lista) %}
+                                            <form method="POST" action="{{ url_for('main.clonar_lista', lista_id=lista.id) }}" style="display: inline;">
+                                                <button type="submit" class="button is-link" onclick="return confirm('Deseja clonar esta campanha? Uma nova lista será criada com os mesmos itens, mas sem doações.')">
+                                                    <i class="fas fa-clone mr-1"></i>
+                                                    Clonar Campanha
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                            {% if admin.is_admin_principal() %}
+                                            <form method="POST" action="{{ url_for('main.excluir_lista', lista_id=lista.id) }}" style="display: inline;">
+                                                <button type="submit" class="button is-danger" onclick="return confirm('Excluir permanentemente esta lista? Esta ação não pode ser desfeita!')">
+                                                    <i class="fas fa-trash mr-1"></i>
+                                                    Excluir
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Paginação -->
+                    {% if pagination.pages > 1 %}
+                    <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+                        {% if pagination.has_prev %}
+                            <a href="{{ url_for('main.listas_concluidas', page=pagination.prev_num) }}" 
+                               class="pagination-previous">
+                                <i class="fas fa-chevron-left mr-1"></i>
+                                Anterior
+                            </a>
+                        {% else %}
+                            <span class="pagination-previous" disabled>
+                                <i class="fas fa-chevron-left mr-1"></i>
+                                Anterior
+                            </span>
+                        {% endif %}
+                        
+                        {% if pagination.has_next %}
+                            <a href="{{ url_for('main.listas_concluidas', page=pagination.next_num) }}" 
+                               class="pagination-next">
+                                Próxima
+                                <i class="fas fa-chevron-right ml-1"></i>
+                            </a>
+                        {% else %}
+                            <span class="pagination-next" disabled>
+                                Próxima
+                                <i class="fas fa-chevron-right ml-1"></i>
+                            </span>
+                        {% endif %}
+                        
+                        <ul class="pagination-list">
+                            {% for page_num in pagination.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != pagination.page %}
+                                        <li>
+                                            <a href="{{ url_for('main.listas_concluidas', page=page_num) }}" 
+                                               class="pagination-link">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li>
+                                            <span class="pagination-link is-current">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li><span class="pagination-ellipsis">&hellip;</span></li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    
+                {% else %}
+                    <div class="has-text-centered">
+                        <div class="notification is-success">
+                            <i class="fas fa-trophy mr-2"></i>
+                            Nenhuma lista concluída encontrada.
+                        </div>
+                        <a href="{{ url_for('main.listas_ativas') }}" class="button is-primary is-medium">
+                            <i class="fas fa-list mr-2"></i>
+                            Ver Listas Ativas
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Estatísticas -->
+{% if pagination.items %}
+<section class="section">
+    <div class="container">
+        <div class="columns">
+            <div class="column is-3">
+                <div class="card">
+                    <div class="card-content has-text-centered">
+                        <div class="content">
+                            <span class="icon is-large has-text-success">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </span>
+                            <h4 class="title is-4">{{ total_listas }}</h4>
+                            <p class="subtitle is-6">Listas Concluídas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-3">
+                <div class="card">
+                    <div class="card-content has-text-centered">
+                        <div class="content">
+                            <span class="icon is-large has-text-info">
+                                <i class="fas fa-box fa-2x"></i>
+                            </span>
+                            <h4 class="title is-4">{{ total_itens }}</h4>
+                            <p class="subtitle is-6">Total de Itens</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-3">
+                <div class="card">
+                    <div class="card-content has-text-centered">
+                        <div class="content">
+                            <span class="icon is-large has-text-warning">
+                                <i class="fas fa-heart fa-2x"></i>
+                            </span>
+                            <h4 class="title is-4">{{ total_doacoes }}</h4>
+                            <p class="subtitle is-6">Total de Doações</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-3">
+                <div class="card">
+                    <div class="card-content has-text-centered">
+                        <div class="content">
+                            <span class="icon is-large has-text-danger">
+                                <i class="fas fa-users fa-2x"></i>
+                            </span>
+                            <h4 class="title is-4">{{ total_doadores_unicos }}</h4>
+                            <p class="subtitle is-6">Doadores Únicos</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<style>
+.dropdown.is-hoverable .dropdown-menu {
+    left: auto !important;
+    right: 0 !important;
+    min-width: 180px;
+    max-width: 220px;
+    z-index: 1000;
+    position: absolute;
+}
+
+.dropdown.is-hoverable {
+    position: relative;
+}
+
+@media (max-width: 600px) {
+    .dropdown.is-hoverable .dropdown-menu {
+        left: 0 !important;
+        right: auto !important;
+        min-width: 140px;
+        max-width: 90vw;
+    }
+}
+</style>
+{% endblock %} 

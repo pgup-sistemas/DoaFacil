@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Sugestões - {{ lista.nome }}{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<section class="hero is-primary is-bold">
+    <div class="hero-body">
+        <div class="container">
+            <div class="columns is-vcentered">
+                <div class="column is-8">
+                    <h1 class="title is-2 has-text-white">
+                        <i class="fas fa-lightbulb mr-3"></i>
+                        Gerenciar Sugestões
+                    </h1>
+                    <h2 class="subtitle is-4 has-text-white">
+                        {{ lista.nome }}
+                    </h2>
+                </div>
+                <div class="column is-4 has-text-centered">
+                    <a href="{{ url_for('main.dashboard', token=lista.token_admin) }}" class="button is-light is-rounded">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Voltar ao Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Sugestões Pendentes -->
+<section class="section">
+    <div class="container">
+        <div class="has-text-centered mb-4">
+            <h2 class="title is-3">
+                <i class="fas fa-clock mr-2"></i>
+                Sugestões Pendentes
+            </h2>
+            <p class="subtitle is-6">Aprove ou rejeite as sugestões da comunidade</p>
+        </div>
+        
+        {% if pagination.items %}
+            {% set sugestoes_pendentes = [] %}
+            {% for sugestao in pagination.items %}
+                {% if not sugestao.aprovada %}
+                    {% set _ = sugestoes_pendentes.append(sugestao) %}
+                {% endif %}
+            {% endfor %}
+            
+            {% if sugestoes_pendentes %}
+                <div class="columns is-multiline">
+                    {% for sugestao in sugestoes_pendentes %}
+                    <div class="column is-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-header-title">
+                                    <h3 class="title is-4">{{ sugestao.nome }}</h3>
+                                </div>
+                                <div class="card-header-icon">
+                                    <span class="tag is-warning">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        Pendente
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <div class="content">
+                                    <p><strong>Sugerido por:</strong> {{ sugestao.sugestor_nome }}</p>
+                                    <p><strong>Quantidade:</strong> {{ sugestao.quantidade_necessaria }} {{ sugestao.unidade_medida }}</p>
+                                    {% if sugestao.descricao %}
+                                        <p><strong>Descrição:</strong> {{ sugestao.descricao }}</p>
+                                    {% endif %}
+                                    <p class="has-text-grey-light is-size-7">
+                                        <i class="fas fa-calendar mr-1"></i>
+                                        {{ sugestao.data_sugestao.strftime('%d/%m/%Y às %H:%M') }}
+                                    </p>
+                                </div>
+                                
+                                <div class="buttons is-centered mt-4">
+                                    <form method="POST" action="{{ url_for('main.aprovar_sugestao', token=lista.token_admin, sugestao_id=sugestao.id) }}" style="display: inline;">
+                                        <button type="submit" class="button is-success is-rounded" onclick="return confirm('Aprovar esta sugestão?')">
+                                            <i class="fas fa-check mr-1"></i>
+                                            Aprovar
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('main.rejeitar_sugestao', token=lista.token_admin, sugestao_id=sugestao.id) }}" style="display: inline;">
+                                        <button type="submit" class="button is-danger is-rounded" onclick="return confirm('Rejeitar esta sugestão?')">
+                                            <i class="fas fa-times mr-1"></i>
+                                            Rejeitar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Paginação -->
+                {% if pagination.pages > 1 %}
+                <div class="mt-6">
+                    <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+                        {% if pagination.has_prev %}
+                            <a href="{{ url_for('main.gerenciar_sugestoes', token=lista.token_admin, page=pagination.prev_num) }}"
+                               class="pagination-previous">
+                                <i class="fas fa-chevron-left mr-1"></i>
+                                Anterior
+                            </a>
+                        {% else %}
+                            <span class="pagination-previous" disabled>
+                                <i class="fas fa-chevron-left mr-1"></i>
+                                Anterior
+                            </span>
+                        {% endif %}
+                        
+                        {% if pagination.has_next %}
+                            <a href="{{ url_for('main.gerenciar_sugestoes', token=lista.token_admin, page=pagination.next_num) }}"
+                               class="pagination-next">
+                                Próxima
+                                <i class="fas fa-chevron-right ml-1"></i>
+                            </a>
+                        {% else %}
+                            <span class="pagination-next" disabled>
+                                Próxima
+                                <i class="fas fa-chevron-right ml-1"></i>
+                            </span>
+                        {% endif %}
+                        
+                        <ul class="pagination-list">
+                            {% for page_num in pagination.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != pagination.page %}
+                                        <li>
+                                            <a href="{{ url_for('main.gerenciar_sugestoes', token=lista.token_admin, page=page_num) }}"
+                                               class="pagination-link">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li>
+                                            <span class="pagination-link is-current">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li><span class="pagination-ellipsis">&hellip;</span></li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </nav>
+                    
+                    <div class="has-text-centered mt-3">
+                        <p class="has-text-grey-light is-size-7">
+                            Mostrando {{ pagination.items|length }} de {{ pagination.total }} sugestões
+                            (Página {{ pagination.page }} de {{ pagination.pages }})
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="has-text-centered">
+                    <div class="notification is-info">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Nenhuma sugestão pendente no momento.
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="has-text-centered">
+                <div class="notification is-info">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Nenhuma sugestão foi enviada ainda.
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Sugestões Aprovadas -->
+{% if pagination.items %}
+    {% set sugestoes_aprovadas = [] %}
+    {% for sugestao in pagination.items %}
+        {% if sugestao.aprovada %}
+            {% set _ = sugestoes_aprovadas.append(sugestao) %}
+        {% endif %}
+    {% endfor %}
+    
+    {% if sugestoes_aprovadas %}
+    <section class="section has-background-light">
+        <div class="container">
+            <div class="has-text-centered mb-4">
+                <h2 class="title is-3">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    Sugestões Aprovadas
+                </h2>
+                <p class="subtitle is-6">Itens que foram adicionados à lista</p>
+            </div>
+            
+            <div class="columns is-multiline">
+                {% for sugestao in sugestoes_aprovadas %}
+                <div class="column is-4">
+                    <div class="card">
+                        <div class="card-content">
+                            <h4 class="title is-5">{{ sugestao.nome }}</h4>
+                            <p class="subtitle is-6">
+                                <i class="fas fa-user mr-1"></i>
+                                {{ sugestao.sugestor_nome }}
+                            </p>
+                            
+                            <div class="content">
+                                <p><strong>Quantidade:</strong> {{ sugestao.quantidade_necessaria }} {{ sugestao.unidade_medida }}</p>
+                                {% if sugestao.descricao %}
+                                    <p><strong>Descrição:</strong> {{ sugestao.descricao }}</p>
+                                {% endif %}
+                                <p class="has-text-grey-light is-size-7">
+                                    <i class="fas fa-calendar mr-1"></i>
+                                    {{ sugestao.data_sugestao.strftime('%d/%m/%Y') }}
+                                </p>
+                            </div>
+                            
+                            <div class="tags">
+                                <span class="tag is-success">
+                                    <i class="fas fa-check mr-1"></i>
+                                    Aprovada
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+{% endif %}
+{% endblock %} 

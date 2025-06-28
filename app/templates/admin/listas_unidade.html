@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Listas da Unidade - {{ unidade.nome }}{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<section class="hero is-primary is-bold">
+    <div class="hero-body">
+        <div class="container">
+            <div class="columns is-vcentered">
+                <div class="column is-8">
+                    <h1 class="title is-2 has-text-white">
+                        <i class="fas fa-list mr-3"></i>
+                        Listas da Unidade
+                    </h1>
+                    <h2 class="subtitle is-4 has-text-white">
+                        {{ unidade.nome }}
+                    </h2>
+                    {% if unidade.nome_fantasia %}
+                        <p class="has-text-white-light">{{ unidade.nome_fantasia }}</p>
+                    {% endif %}
+                </div>
+                <div class="column is-4 has-text-right">
+                    <div class="buttons">
+                        <a href="{{ url_for('main.criar_lista', unidade_id=unidade.id) }}" class="button is-white is-outlined">
+                            <i class="fas fa-plus mr-2"></i>
+                            Nova Lista
+                        </a>
+                        <a href="{{ url_for('main.admin_dashboard') }}" class="button is-white is-outlined">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Voltar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Informações da Unidade -->
+<section class="section pt-3 pb-3">
+    <div class="container">
+        <div class="card">
+            <div class="card-content">
+                <div class="columns is-multiline">
+                    <div class="column is-3">
+                        <div class="box has-text-centered">
+                            <span class="icon is-large has-text-info">
+                                <i class="fas fa-list fa-2x"></i>
+                            </span>
+                            <h4 class="title is-4">{{ listas|length }}</h4>
+                            <p class="subtitle is-6">Total de Listas</p>
+                        </div>
+                    </div>
+                    <div class="column is-3">
+                        <div class="box has-text-centered">
+                            <span class="icon is-large has-text-success">
+                                <i class="fas fa-play fa-2x"></i>
+                            </span>
+                            <h4 class="title is-4">
+                                {% set listas_ativas = listas|selectattr('ativa', 'equalto', true)|selectattr('concluida', 'equalto', false)|selectattr('cancelada', 'equalto', false)|list %}
+                                {{ listas_ativas|length }}
+                            </h4>
+                            <p class="subtitle is-6">Listas Ativas</p>
+                        </div>
+                    </div>
+                    <div class="column is-3">
+                        <div class="box has-text-centered">
+                            <span class="icon is-large has-text-warning">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </span>
+                            <h4 class="title is-4">
+                                {% set listas_concluidas = listas|selectattr('concluida', 'equalto', true)|list %}
+                                {{ listas_concluidas|length }}
+                            </h4>
+                            <p class="subtitle is-6">Listas Concluídas</p>
+                        </div>
+                    </div>
+                    <div class="column is-3">
+                        <div class="box has-text-centered">
+                            <span class="icon is-large has-text-danger">
+                                <i class="fas fa-ban fa-2x"></i>
+                            </span>
+                            <h4 class="title is-4">
+                                {% set listas_canceladas = listas|selectattr('cancelada', 'equalto', true)|list %}
+                                {{ listas_canceladas|length }}
+                            </h4>
+                            <p class="subtitle is-6">Listas Canceladas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Listas -->
+<section class="section">
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-title">
+                    <h3 class="title is-4">
+                        <i class="fas fa-list mr-2"></i>
+                        Todas as Listas
+                    </h3>
+                </div>
+                <div class="card-header-icon">
+                    <a href="{{ url_for('main.criar_lista', unidade_id=unidade.id) }}" class="button is-primary is-small">
+                        <i class="fas fa-plus mr-1"></i>
+                        Nova Lista
+                    </a>
+                </div>
+            </div>
+            <div class="card-content">
+                {% if listas %}
+                    <div class="table-container">
+                        <table class="table is-fullwidth is-striped">
+                            <thead>
+                                <tr>
+                                    <th>Lista</th>
+                                    <th>Descrição</th>
+                                    <th>Progresso</th>
+                                    <th>Status</th>
+                                    <th>Data de Criação</th>
+                                    <th>Itens</th>
+                                    <th>Doações</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lista in listas %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ lista.nome }}</strong>
+                                        {% set sugestoes_pendentes = lista.sugestoes|selectattr('aprovada', 'equalto', False)|list|length %}
+                                        {% if sugestoes_pendentes > 0 %}
+                                            <br><span class="tag is-warning is-small">
+                                                <i class="fas fa-lightbulb mr-1"></i>
+                                                {{ sugestoes_pendentes }} sugestão{{ 'ões' if sugestoes_pendentes > 1 else 'ão' }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if lista.descricao %}
+                                            {{ lista.descricao[:50] }}{% if lista.descricao|length > 50 %}...{% endif %}
+                                        {% else %}
+                                            <span class="has-text-grey-light">Sem descrição</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <progress class="progress is-info" value="{{ lista.percentual_conclusao }}" max="100">
+                                            {{ "%.1f"|format(lista.percentual_conclusao) }}%
+                                        </progress>
+                                        <small>{{ "%.1f"|format(lista.percentual_conclusao) }}%</small>
+                                    </td>
+                                    <td>
+                                        {% if lista.ativa and not lista.concluida and not lista.cancelada %}
+                                            <span class="tag is-success">Ativa</span>
+                                        {% elif lista.concluida %}
+                                            <span class="tag is-warning">Concluída</span>
+                                        {% elif lista.cancelada %}
+                                            <span class="tag is-danger">Cancelada</span>
+                                        {% else %}
+                                            <span class="tag is-light">Inativa</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ lista.data_criacao.strftime("%d/%m/%Y") }}</td>
+                                    <td>
+                                        <span class="tag is-info">{{ lista.itens|length }}</span>
+                                    </td>
+                                    <td>
+                                        {% set total_doacoes = 0 %}
+                                        {% for item in lista.itens %}
+                                            {% set total_doacoes = total_doacoes + item.doacoes|length %}
+                                        {% endfor %}
+                                        <span class="tag is-success">{{ total_doacoes }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="buttons are-small">
+                                            <a href="{{ url_for('main.visualizar_lista', slug=lista.slug) }}" 
+                                               class="button is-info" title="Ver lista pública">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('main.dashboard', token=lista.token_admin) }}" 
+                                               class="button is-primary" title="Dashboard da lista">
+                                                <i class="fas fa-tachometer-alt"></i>
+                                            </a>
+                                            <a href="{{ url_for('main.exportar_pdf', slug=lista.slug) }}" 
+                                               class="button is-warning" title="Exportar PDF">
+                                                <i class="fas fa-file-pdf"></i>
+                                            </a>
+                                            {% if sugestoes_pendentes > 0 %}
+                                                <a href="{{ url_for('main.gerenciar_sugestoes', token=lista.token_admin) }}" 
+                                                   class="button is-danger" title="Gerenciar sugestões">
+                                                    <i class="fas fa-lightbulb"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="has-text-centered">
+                        <div class="notification is-info">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Nenhuma lista criada para esta unidade ainda.
+                            <br>
+                            <a href="{{ url_for('main.criar_lista', unidade_id=unidade.id) }}" class="button is-info is-small mt-2">
+                                <i class="fas fa-plus mr-1"></i>
+                                Criar Primeira Lista
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Paginação das Listas -->
+{% if pagination and pagination.pages > 1 %}
+<section class="section pt-0">
+    <div class="container">
+        <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+            {% if pagination.has_prev %}
+                <a href="{{ url_for('main.listas_unidade', unidade_id=unidade.id, page=pagination.prev_num) }}"
+                   class="pagination-previous">
+                    <i class="fas fa-chevron-left mr-1"></i>
+                    Anterior
+                </a>
+            {% else %}
+                <span class="pagination-previous" disabled>
+                    <i class="fas fa-chevron-left mr-1"></i>
+                    Anterior
+                </span>
+            {% endif %}
+            
+            {% if pagination.has_next %}
+                <a href="{{ url_for('main.listas_unidade', unidade_id=unidade.id, page=pagination.next_num) }}"
+                   class="pagination-next">
+                    Próxima
+                    <i class="fas fa-chevron-right ml-1"></i>
+                </a>
+            {% else %}
+                <span class="pagination-next" disabled>
+                    Próxima
+                    <i class="fas fa-chevron-right ml-1"></i>
+                </span>
+            {% endif %}
+            
+            <ul class="pagination-list">
+                {% for page_num in pagination.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != pagination.page %}
+                            <li>
+                                <a href="{{ url_for('main.listas_unidade', unidade_id=unidade.id, page=page_num) }}"
+                                   class="pagination-link">{{ page_num }}</a>
+                            </li>
+                        {% else %}
+                            <li>
+                                <span class="pagination-link is-current">{{ page_num }}</span>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li><span class="pagination-ellipsis">&hellip;</span></li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </nav>
+        
+        <div class="has-text-centered mt-3">
+            <p class="has-text-grey-light is-size-7">
+                Mostrando {{ pagination.items|length }} de {{ pagination.total }} listas
+                (Página {{ pagination.page }} de {{ pagination.pages }})
+            </p>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %} 

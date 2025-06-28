@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Unidade - {{ unidade.nome }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="columns is-centered">
+            <div class="column is-8">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-header-title">
+                            <h1 class="title is-3">
+                                <i class="fas fa-edit mr-2"></i>
+                                Editar Unidade
+                            </h1>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <!-- Unidade Info -->
+                        <div class="notification is-info is-light mb-4">
+                            <div class="media">
+                                <div class="media-left">
+                                    <span class="icon is-large">
+                                        <i class="fas fa-building fa-2x"></i>
+                                    </span>
+                                </div>
+                                <div class="media-content">
+                                    <h4 class="title is-5">{{ unidade.nome }}</h4>
+                                    <p class="subtitle is-6">
+                                        <i class="fas fa-user mr-1"></i>
+                                        Responsável: {{ unidade.responsavel }}
+                                    </p>
+                                    <p class="subtitle is-6">
+                                        <i class="fas fa-list mr-1"></i>
+                                        {{ unidade.listas|length }} lista(s) criada(s)
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <form method="POST">
+                            {{ form.hidden_tag() }}
+                            
+                            <div class="field">
+                                <label class="label">{{ form.nome.label }}</label>
+                                <div class="control has-icons-left">
+                                    {{ form.nome(class="input", placeholder="Ex: Igreja Nossa Senhora da Paz") }}
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-building"></i>
+                                    </span>
+                                </div>
+                                {% if form.nome.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.nome.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="field">
+                                <label class="label">{{ form.responsavel.label }}</label>
+                                <div class="control has-icons-left">
+                                    {{ form.responsavel(class="input", placeholder="Nome do responsável") }}
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                </div>
+                                {% if form.responsavel.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.responsavel.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="field">
+                                <label class="label">{{ form.email.label }}</label>
+                                <div class="control has-icons-left">
+                                    {{ form.email(class="input", placeholder="email@exemplo.com") }}
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                </div>
+                                {% if form.email.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.email.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                                <p class="help">Opcional - para receber notificações de doações</p>
+                            </div>
+                            
+                            <div class="field">
+                                <label class="label">{{ form.descricao.label }}</label>
+                                <div class="control">
+                                    {{ form.descricao(class="textarea", placeholder="Descreva brevemente sua organização...") }}
+                                </div>
+                                {% if form.descricao.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.descricao.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Seção de Redes Sociais -->
+                            <div class="notification is-info is-light">
+                                <h4 class="title is-5">
+                                    <i class="fas fa-share-alt mr-2"></i>
+                                    Configurações de Redes Sociais
+                                </h4>
+                                <p class="subtitle is-6">Essas informações serão usadas nos links de compartilhamento das suas listas</p>
+                            </div>
+                            
+                            <div class="field">
+                                <label class="label">{{ form.whatsapp_numero.label }}</label>
+                                <div class="control has-icons-left">
+                                    {{ form.whatsapp_numero(class="input", placeholder="11999999999") }}
+                                    <span class="icon is-small is-left">
+                                        <i class="fab fa-whatsapp"></i>
+                                    </span>
+                                </div>
+                                {% if form.whatsapp_numero.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.whatsapp_numero.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                                <p class="help">Apenas números, sem espaços ou caracteres especiais</p>
+                            </div>
+                            
+                            <div class="field">
+                                <label class="label">{{ form.facebook_url.label }}</label>
+                                <div class="control has-icons-left">
+                                    {{ form.facebook_url(class="input", placeholder="https://facebook.com/sua-pagina") }}
+                                    <span class="icon is-small is-left">
+                                        <i class="fab fa-facebook"></i>
+                                    </span>
+                                </div>
+                                {% if form.facebook_url.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.facebook_url.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                                <p class="help">URL completa da sua página no Facebook</p>
+                            </div>
+                            
+                            <div class="field">
+                                <label class="label">{{ form.instagram_url.label }}</label>
+                                <div class="control has-icons-left">
+                                    {{ form.instagram_url(class="input", placeholder="https://instagram.com/seu-perfil") }}
+                                    <span class="icon is-small is-left">
+                                        <i class="fab fa-instagram"></i>
+                                    </span>
+                                </div>
+                                {% if form.instagram_url.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.instagram_url.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                                <p class="help">URL completa do seu perfil no Instagram</p>
+                            </div>
+                            
+                            <div class="field">
+                                <label class="label">{{ form.website_url.label }}</label>
+                                <div class="control has-icons-left">
+                                    {{ form.website_url(class="input", placeholder="https://seusite.com.br") }}
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-globe"></i>
+                                    </span>
+                                </div>
+                                {% if form.website_url.errors %}
+                                    <p class="help is-danger">
+                                        {% for error in form.website_url.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </p>
+                                {% endif %}
+                                <p class="help">URL do seu site oficial (opcional)</p>
+                            </div>
+                            
+                            <div class="field is-grouped">
+                                <div class="control">
+                                    <button type="submit" class="button is-primary is-rounded">
+                                        <i class="fas fa-save mr-2"></i>
+                                        Salvar Alterações
+                                    </button>
+                                </div>
+                                <div class="control">
+                                    <a href="{{ url_for('main.admin_dashboard') }}" class="button is-light is-rounded">
+                                        <i class="fas fa-arrow-left mr-2"></i>
+                                        Voltar
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Info Box -->
+                <div class="notification is-warning is-light mt-4">
+                    <div class="content">
+                        <h4 class="title is-5">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Sobre as Configurações de Redes Sociais
+                        </h4>
+                        <p>
+                            As informações de redes sociais que você configurar aqui serão usadas automaticamente 
+                            nos links de compartilhamento das suas listas de arrecadação, tornando mais fácil 
+                            para os doadores entrarem em contato com sua organização.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 

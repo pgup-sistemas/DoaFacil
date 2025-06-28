@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Doação Realizada - {{ lista.nome }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="columns is-centered">
+            <div class="column is-8">
+                <div class="card">
+                    <div class="card-content has-text-centered">
+                        <span class="icon is-large has-text-success">
+                            <i class="fas fa-check-circle fa-3x"></i>
+                        </span>
+                        <h1 class="title is-3 mt-3">
+                            {% if doador_nome %}
+                                Obrigado, {{ doador_nome }}!
+                            {% else %}
+                                Obrigado pela sua doação!
+                            {% endif %}
+                        </h1>
+                        <p class="subtitle is-5">Sua contribuição foi registrada com sucesso na lista <strong>{{ lista.nome }}</strong>.</p>
+                        <p class="mt-4">Você receberá um contato caso seja necessário confirmar ou combinar a entrega.</p>
+                        <a href="{{ url_for('main.visualizar_lista', slug=lista.slug) }}" class="button is-primary is-rounded mt-4">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Voltar para a Lista
+                        </a>
+                        <div class="notification is-warning is-light mt-5">
+                            <i class="fas fa-user-shield mr-2"></i>
+                            <strong>Privacidade:</strong> Seus dados são protegidos e usados apenas para contato e controle interno, conforme a LGPD.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 

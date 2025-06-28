@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Debug Dashboard - DoaFácil{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-title">
+                    <h1 class="title">Debug Dashboard</h1>
+                </div>
+            </div>
+            <div class="card-content">
+                <h2 class="title is-4">Dados do Admin Logado</h2>
+                <div class="content">
+                    <p><strong>ID:</strong> {{ admin.id }}</p>
+                    <p><strong>Nome:</strong> {{ admin.nome }}</p>
+                    <p><strong>Username:</strong> {{ admin.username }}</p>
+                    <p><strong>Email:</strong> {{ admin.email }}</p>
+                    <p><strong>Role:</strong> {{ admin.role }}</p>
+                    <p><strong>Ativo:</strong> {{ admin.ativo }}</p>
+                    <p><strong>É Admin Principal:</strong> {{ admin.is_admin_principal() }}</p>
+                </div>
+                
+                <h2 class="title is-4">Dados dos Admins</h2>
+                <div class="content">
+                    <p><strong>Total de admins:</strong> {{ admins|length }}</p>
+                    
+                    {% if admins %}
+                        <table class="table is-fullwidth">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                    <th>Ativo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for admin_user in admins %}
+                                <tr>
+                                    <td>{{ admin_user.id }}</td>
+                                    <td>{{ admin_user.nome }}</td>
+                                    <td>{{ admin_user.username }}</td>
+                                    <td>{{ admin_user.role }}</td>
+                                    <td>{{ admin_user.ativo }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p class="has-text-danger">Nenhum admin encontrado!</p>
+                    {% endif %}
+                </div>
+                
+                <h2 class="title is-4">Contadores</h2>
+                <div class="content">
+                    {% set admin_principal = 0 %}
+                    {% set admin_unidade = 0 %}
+                    {% set usuarios_ativos = 0 %}
+                    
+                    {% for admin_user in admins %}
+                        {% if admin_user.role == 'admin_principal' %}
+                            {% set admin_principal = admin_principal + 1 %}
+                        {% endif %}
+                        {% if admin_user.role == 'admin_unidade' %}
+                            {% set admin_unidade = admin_unidade + 1 %}
+                        {% endif %}
+                        {% if admin_user.ativo %}
+                            {% set usuarios_ativos = usuarios_ativos + 1 %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <p><strong>Administradores Principais:</strong> {{ admin_principal }}</p>
+                    <p><strong>Administradores de Unidade:</strong> {{ admin_unidade }}</p>
+                    <p><strong>Usuários Ativos:</strong> {{ usuarios_ativos }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 
